@@ -24,47 +24,51 @@ export default function UserTable({ users, onEdit, onDelete }: Props) {
           },
         },
       }}
-      className="overflow-x-auto"
+      className="overflow-x-auto w-full"
     >
-      <table className="table table-zebra w-full text-sm rounded-lg overflow-hidden shadow border border-base-300">
-        <thead className="bg-base-200 text-base-content">
-          <tr>
-            <th>Nama</th>
-            <th>Email</th>
-            <th>Umur</th>
-            <th>Gender</th>
-            <th>Kamar</th>
-            <th>Catatan Medis</th>
-            <th className="text-right">Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((user) => (
-            <motion.tr key={user.id} variants={rowVariants}>
-              <td>{user.name}</td>
-              <td>{user.email}</td>
-              <td>{user.age}</td>
-              <td>{user.gender}</td>
-              <td>{user.room}</td>
-              <td>{user.medicalNote}</td>
-              <td className="flex justify-end gap-2 py-2">
-                <button
-                  className="btn btn-sm btn-info"
-                  onClick={() => onEdit(user)}
-                >
-                  Edit
-                </button>
-                <button
-                  className="btn btn-sm btn-error"
-                  onClick={() => onDelete(user.id!)}
-                >
-                  Hapus
-                </button>
-              </td>
-            </motion.tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="min-w-[640px] md:min-w-full">
+        <table className="table table-zebra w-full text-sm rounded-xl shadow border border-base-300">
+          <thead className="bg-base-200 text-base-content text-xs md:text-sm">
+            <tr>
+              <th>Nama</th>
+              <th className="hidden sm:table-cell">Email</th>
+              <th>Umur</th>
+              <th className="hidden sm:table-cell">Gender</th>
+              <th>Kamar</th>
+              <th className="hidden lg:table-cell">Catatan Medis</th>
+              <th className="text-right">Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((user) => (
+              <motion.tr key={user.id} variants={rowVariants} className="hover">
+                <td>{user.name}</td>
+                <td className="hidden sm:table-cell">{user.email}</td>
+                <td>{user.age}</td>
+                <td className="hidden sm:table-cell">{user.gender}</td>
+                <td>{user.room}</td>
+                <td className="hidden lg:table-cell">{user.medicalNote}</td>
+                <td>
+                  <div className="flex flex-wrap justify-end gap-2 py-1">
+                    <button
+                      className="btn btn-xs btn-info"
+                      onClick={() => onEdit(user)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="btn btn-xs btn-error"
+                      onClick={() => onDelete(user.id!)}
+                    >
+                      Hapus
+                    </button>
+                  </div>
+                </td>
+              </motion.tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </motion.div>
   );
 }

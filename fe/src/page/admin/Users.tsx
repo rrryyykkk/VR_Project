@@ -27,7 +27,7 @@ const dummyUsers: User[] = [
   },
 ];
 
-export default function UsersPage() {
+const UsersPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: "success" | "error";
@@ -74,11 +74,11 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Manajemen Penghuni</h2>
+    <div className="p-4 sm:p-6 space-y-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+        <h2 className="text-xl sm:text-2xl font-bold">Manajemen Penghuni</h2>
         <button
-          className="btn btn-primary"
+          className="btn btn-primary w-full sm:w-auto"
           onClick={() => {
             setIsAddMode(true);
             setSelectedUser(null);
@@ -88,19 +88,21 @@ export default function UsersPage() {
         </button>
       </div>
 
-      <UserTable
-        users={users}
-        onEdit={(user) => {
-          setSelectedUser(user);
-          setIsAddMode(true);
-        }}
-        onDelete={(id) => deleteMutation.mutate(id)}
-      />
+      <div className="overflow-x-auto bg-base-100 p-4 rounded-xl shadow">
+        <UserTable
+          users={users}
+          onEdit={(user) => {
+            setSelectedUser(user);
+            setIsAddMode(true);
+          }}
+          onDelete={(id) => deleteMutation.mutate(id)}
+        />
+      </div>
 
       <AnimatePresence>
         {(isAddMode || selectedUser) && (
           <motion.div
-            className="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -109,7 +111,7 @@ export default function UsersPage() {
               initial={{ scale: 0.95 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.95 }}
-              className="bg-base-100 p-6 rounded shadow-lg w-full max-w-md"
+              className="bg-base-100 p-6 rounded-xl shadow-xl w-full max-w-md"
             >
               <UserForm
                 initialData={selectedUser || undefined}
@@ -133,4 +135,6 @@ export default function UsersPage() {
       )}
     </div>
   );
-}
+};
+
+export default UsersPage;

@@ -12,10 +12,9 @@ interface UserFormProps {
 const UserForm = ({ onSubmit, onCancel, initialData }: UserFormProps) => {
   const [form, setForm] = useState<User>({
     name: "",
-    email: "",
     age: 0,
     gender: "Male",
-    room: "",
+    riwayatPendidikan: "",
     medicalNote: "",
     ...initialData,
   });
@@ -55,17 +54,6 @@ const UserForm = ({ onSubmit, onCancel, initialData }: UserFormProps) => {
         </div>
 
         <div className="form-control">
-          <label className="label font-semibold">Email</label>
-          <input
-            name="email"
-            value={form.email}
-            onChange={handleChange}
-            placeholder="Email"
-            className="input input-bordered w-full"
-          />
-        </div>
-
-        <div className="form-control">
           <label className="label font-semibold">Age</label>
           <input
             name="age"
@@ -91,10 +79,10 @@ const UserForm = ({ onSubmit, onCancel, initialData }: UserFormProps) => {
         </div>
 
         <div className="form-control md:col-span-2">
-          <label className="label font-semibold">Room</label>
+          <label className="label font-semibold">Riwayat Pendidikan</label>
           <input
-            name="room"
-            value={form.room}
+            name="riwayatPendidikan"
+            value={form.riwayatPendidikan}
             onChange={handleChange}
             placeholder="Room (e.g. A101)"
             className="input input-bordered w-full"

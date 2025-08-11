@@ -3,12 +3,12 @@ import {
   FiHome,
   FiUsers,
   FiBarChart2,
-  FiSettings,
   FiUser,
   FiLogOut,
   FiMenu,
 } from "react-icons/fi";
 import { NavLink } from "react-router";
+import { TbBadgeVr } from "react-icons/tb";
 
 const SidebarAdmin = ({
   isOpen,
@@ -21,7 +21,7 @@ const SidebarAdmin = ({
     { name: "Dashboard", icon: <FiHome />, path: "/admin" },
     { name: "Users", icon: <FiUsers />, path: "/admin/users" },
     { name: "Analytics", icon: <FiBarChart2 />, path: "/admin/analytics" },
-    { name: "Settings", icon: <FiSettings />, path: "/admin/settings" },
+    { name: "VR/XR", icon: <TbBadgeVr />, path: "/admin/VrAdmin" },
     { name: "Profile", icon: <FiUser />, path: "/admin/profile" },
   ];
 
@@ -49,6 +49,7 @@ const SidebarAdmin = ({
             <NavLink
               key={item.name}
               to={item.path}
+              end={item.path === "/admin"}
               className={({ isActive }) =>
                 `flex items-center gap-3 p-3 rounded hover:bg-gray-700 transition-colors ${
                   isActive ? "bg-gray-700" : ""

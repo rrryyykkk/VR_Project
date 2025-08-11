@@ -4,13 +4,17 @@ import About from "./page/landingPage/About";
 import Contact from "./page/landingPage/Contact";
 import LandingPage from "./layout/LandingPageLayout";
 import Donation from "./page/landingPage/Donation";
-import Login from "./page/auth/Login";
+import ProfilePageUser from "./page/users/ProfilePageUser";
 import AdminLayout from "./layout/AdminLayout";
 import Dashboard from "./page/admin/Dashboard";
 import UsersPage from "./page/admin/Users";
 import Analytic from "./page/admin/Analytic";
 import AnalyticById from "./page/admin/AnalyticById";
 import ProfilePage from "./page/admin/ProfileAdmin";
+import LoginUsers from "./page/auth/LoginUsers";
+import LoginAdmin from "./page/auth/LoginAdmin";
+import UsersLayout from "./layout/userLayout";
+import HistoryPageUsers from "./page/users/HistoryPageUser";
 
 const App = () => {
   return (
@@ -49,7 +53,8 @@ const App = () => {
         }
       />
       {/* auth */}
-      <Route path="/login" element={<Login />} />
+      <Route path="/login" element={<LoginUsers />} />
+      <Route path="/login-admin" element={<LoginAdmin />} />
       {/* admin */}
       <Route
         path="/admin"
@@ -89,6 +94,31 @@ const App = () => {
           <AdminLayout>
             <ProfilePage />
           </AdminLayout>
+        }
+      />
+      <Route
+        path="/admin/VrAdmin"
+        element={
+          <AdminLayout>
+            <ProfilePage />
+          </AdminLayout>
+        }
+      />
+      {/* users */}
+      <Route
+        path="/profile"
+        element={
+          <UsersLayout>
+            <ProfilePageUser />
+          </UsersLayout>
+        }
+      />
+      <Route
+        path="/users/history"
+        element={
+          <UsersLayout>
+            <HistoryPageUsers />
+          </UsersLayout>
         }
       />
     </Routes>

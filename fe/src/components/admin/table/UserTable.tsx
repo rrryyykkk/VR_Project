@@ -31,10 +31,9 @@ export default function UserTable({ users, onEdit, onDelete }: Props) {
           <thead className="bg-base-200 text-base-content text-xs md:text-sm">
             <tr>
               <th>Nama</th>
-              <th className="hidden sm:table-cell">Email</th>
               <th>Umur</th>
               <th className="hidden sm:table-cell">Gender</th>
-              <th>Kamar</th>
+              <th className="hidden sm:table-cell">Riwayat Pendidikan</th>
               <th className="hidden lg:table-cell">Catatan Medis</th>
               <th className="text-right">Aksi</th>
             </tr>
@@ -43,10 +42,9 @@ export default function UserTable({ users, onEdit, onDelete }: Props) {
             {users.map((user) => (
               <motion.tr key={user.id} variants={rowVariants} className="hover">
                 <td>{user.name}</td>
-                <td className="hidden sm:table-cell">{user.email}</td>
                 <td>{user.age}</td>
                 <td className="hidden sm:table-cell">{user.gender}</td>
-                <td>{user.room}</td>
+                <td>{user.riwayatPendidikan}</td>
                 <td className="hidden lg:table-cell">{user.medicalNote}</td>
                 <td>
                   <div className="flex flex-wrap justify-end gap-2 py-1">

@@ -10,11 +10,16 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex h-screen">
+      {" "}
+      {/* full height seperti users */}
+      {/* Sidebar */}
       <SidebarAdmin isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-      <div className="flex-1 flex flex-col">
+      {/* Konten kanan: Navbar + Main */}
+      <div className="flex flex-col flex-1">
         <NavbarAdmin />
-        <main className="p-4">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4">{children}</main>{" "}
+        {/* tambah flex-1 dan overflow-y-auto supaya main bisa scroll jika isi panjang */}
       </div>
     </div>
   );

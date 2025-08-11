@@ -10,19 +10,17 @@ const dummyUsers: User[] = [
   {
     id: 1,
     name: "Budi",
-    email: "budi@example.com",
     age: 74,
     gender: "Male",
-    room: "A1",
+    riwayatPendidikan: "SMA",
     medicalNote: "Diabetes",
   },
   {
     id: 2,
     name: "Siti",
-    email: "siti@example.com",
     age: 69,
     gender: "Female",
-    room: "B3",
+    riwayatPendidikan: "D3",
     medicalNote: "Hipertensi",
   },
 ];

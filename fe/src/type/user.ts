@@ -8,11 +8,12 @@ export interface User {
   riwayatPendidikan: string;
   medicalNote: string;
 
-  // tambahan untuk monitoring VR
-  isActive?: boolean; // true = sedang aktif VR
-  currentSessionId?: string; // session VR yang sedang aktif
-  currentRoom?: string; // nama room terakhir user di VR
-  device?: string; // device VR yang dipakai user saat aktif
+  // status login & VR
+  isLoggedIn?: boolean; // true kalau sudah login ke sistem
+  isActive?: boolean; // true kalau sedang aktif VR
+  currentSessionId?: string;
+  currentRoom?: string;
+  device?: string;
 }
 
 export const dummyUsers: User[] = [
@@ -26,7 +27,8 @@ export const dummyUsers: User[] = [
     riwayatPendidikan: "SMA",
     medicalNote: "Diabetes",
 
-    // data aktif VR
+    // Login & aktif VR
+    isLoggedIn: true,
     isActive: true,
     currentSessionId: "sess-001",
     currentRoom: "Gallery",
@@ -42,7 +44,8 @@ export const dummyUsers: User[] = [
     riwayatPendidikan: "D3",
     medicalNote: "Hipertensi",
 
-    // user ini tidak aktif VR sekarang
+    // Login tapi belum aktif VR
+    isLoggedIn: true,
     isActive: false,
   },
   {
@@ -55,10 +58,8 @@ export const dummyUsers: User[] = [
     riwayatPendidikan: "S1",
     medicalNote: "Sehat",
 
-    // aktif di VR dengan session lain
-    isActive: true,
-    currentSessionId: "sess-004",
-    currentRoom: "Lobby",
-    device: "HTC Vive",
+    // Tidak login
+    isLoggedIn: false,
+    isActive: false,
   },
 ];

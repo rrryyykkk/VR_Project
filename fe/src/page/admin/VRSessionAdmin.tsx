@@ -32,8 +32,7 @@ const VRSessionAdmin = () => {
   };
 
   const getLastRoomName = (session: VRSession | null): string => {
-    if (!session || !session.roomHistory || session.roomHistory.length === 0)
-      return "-";
+    if (!session?.roomHistory?.length) return "-";
     const sortedRooms = [...session.roomHistory].sort(
       (a, b) =>
         new Date(b.enterTime).getTime() - new Date(a.enterTime).getTime()
@@ -56,6 +55,7 @@ const VRSessionAdmin = () => {
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <h1 className="text-3xl font-bold mb-6">Monitoring Sesi Pengguna</h1>
 
+      {/* Table */}
       <table className="w-full table-auto border-collapse border border-gray-300">
         <thead>
           <tr className="bg-gray-100">
@@ -127,15 +127,22 @@ const VRSessionAdmin = () => {
         </tbody>
       </table>
 
+      {/* Modal with Framer Motion */}
       <AnimatePresence>
         {(selectedUser || selectedSession) && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
             className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
           >
-            <div className="bg-white rounded-lg shadow-lg max-w-3xl w-full p-6 relative">
+            <motion.div
+              initial={{ scale: 0.8, y: 30 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.8, y: 30 }}
+              transition={{ type: "spring", stiffness: 200, damping: 20 }}
+              className="bg-white rounded-lg shadow-lg max-w-3xl w-full p-6 relative"
+            >
               <button
                 onClick={closeModal}
                 className="absolute top-3 right-3 text-red-600 font-bold text-xl cursor-pointer"
@@ -173,8 +180,7 @@ const VRSessionAdmin = () => {
 
                   <div className="mt-4">
                     <strong>Ruang yang Dikunjungi:</strong>
-                    {selectedSession.roomHistory &&
-                    selectedSession.roomHistory.length > 0 ? (
+                    {selectedSession?.roomHistory?.length ? (
                       <ul className="list-disc list-inside">
                         {selectedSession.roomHistory.map((room) => (
                           <li key={room.roomId}>
@@ -190,7 +196,7 @@ const VRSessionAdmin = () => {
                   </div>
                 </>
               )}
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

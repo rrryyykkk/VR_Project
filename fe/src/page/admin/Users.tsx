@@ -10,16 +10,20 @@ const dummyUsers: User[] = [
   {
     id: 1,
     name: "Budi",
+    email: "budi@gmail.com",
+    password: "default123",
     age: 74,
-    gender: "Male",
+    gender: "Laki-Laki",
     riwayatPendidikan: "SMA",
     medicalNote: "Diabetes",
   },
   {
     id: 2,
     name: "Siti",
+    email: "siti@gmail.com",
+    password: "default123",
     age: 69,
-    gender: "Female",
+    gender: "Perempuan",
     riwayatPendidikan: "D3",
     medicalNote: "Hipertensi",
   },
@@ -74,7 +78,7 @@ const UsersPage = () => {
   return (
     <div className="p-4 sm:p-6 space-y-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-        <h2 className="text-xl sm:text-2xl font-bold">Manajemen Penghuni</h2>
+        <h2 className="text-xl sm:text-2xl font-bold">Manajemen User</h2>
         <button
           className="btn btn-primary w-full sm:w-auto"
           onClick={() => {
@@ -82,7 +86,7 @@ const UsersPage = () => {
             setSelectedUser(null);
           }}
         >
-          Tambah Penghuni
+          Tambah User
         </button>
       </div>
 

@@ -1,10 +1,15 @@
+// src/components/admin/table/XRSummaryTable.tsx
 import { Link } from "react-router";
-import { xrSessions } from "../../../data/XrSession";
+import type { VRSession } from "../../../type/VRdata";
 
-const XRSummaryTable = () => {
+interface XRSummaryTableProps {
+  data: VRSession[];
+}
+
+export default function XRSummaryTable({ data }: XRSummaryTableProps) {
   return (
     <div className="overflow-x-auto bg-base-100 p-4 rounded-xl shadow">
-      <table className="table table-zebra">
+      <table className="table table-zebra min-w-[600px]">
         <thead>
           <tr>
             <th>Nama Pasien</th>
@@ -15,17 +20,21 @@ const XRSummaryTable = () => {
           </tr>
         </thead>
         <tbody>
-          {xrSessions.map((s) => (
-            <tr key={s.sessionId}>
-              <td>{s.name}</td>
+          {data.map((s) => (
+            <tr key={s.sessionId} className="hover">
+              <td>{s.name || "-"}</td>
               <td>
                 {Math.floor(s.duration / 60)}m {s.duration % 60}s
               </td>
-              <td>{s.hotspots.join(", ")}</td>
-              <td>{s.device}</td>
+              <td>
+                {s.hotspots && s.hotspots.length > 0
+                  ? s.hotspots.join(", ")
+                  : "-"}
+              </td>
+              <td>{s.device || "-"}</td>
               <td>
                 <Link
-                  to={`/admin/analytics/${s.userId}`}
+                  to={`/admin/analytics/${s.sessionId}`}
                   className="btn btn-sm btn-primary"
                 >
                   Detail
@@ -37,6 +46,4 @@ const XRSummaryTable = () => {
       </table>
     </div>
   );
-};
-
-export default XRSummaryTable;
+}

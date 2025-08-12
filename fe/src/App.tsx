@@ -8,13 +8,15 @@ import ProfilePageUser from "./page/users/ProfilePageUser";
 import AdminLayout from "./layout/AdminLayout";
 import Dashboard from "./page/admin/Dashboard";
 import UsersPage from "./page/admin/Users";
-import Analytic from "./page/admin/Analytic";
 import AnalyticById from "./page/admin/AnalyticById";
 import ProfilePage from "./page/admin/ProfileAdmin";
 import LoginUsers from "./page/auth/LoginUsers";
 import LoginAdmin from "./page/auth/LoginAdmin";
 import UsersLayout from "./layout/userLayout";
 import HistoryPageUsers from "./page/users/HistoryPageUser";
+import Analytic from "./page/admin/Analytic";
+import { adminSessions } from "./data/VRsession";
+import VRSessionAdmin from "./page/admin/VRSessionAdmin";
 
 const App = () => {
   return (
@@ -76,7 +78,7 @@ const App = () => {
         path="/admin/analytics"
         element={
           <AdminLayout>
-            <Analytic />
+            <Analytic sessions={adminSessions} />
           </AdminLayout>
         }
       />
@@ -100,7 +102,7 @@ const App = () => {
         path="/admin/VrAdmin"
         element={
           <AdminLayout>
-            <ProfilePage />
+            <VRSessionAdmin />
           </AdminLayout>
         }
       />

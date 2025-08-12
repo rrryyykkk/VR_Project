@@ -1,13 +1,18 @@
+// src/pages/admin/Analytic.tsx
 import { motion } from "framer-motion";
-import StatCard from "../../components/admin/analystic/StatCard";
-import { xrSessions } from "../../data/XrSession";
+import type { VRSession } from "../../type/VRdata";
 import XRSummaryTable from "../../components/admin/table/XRSummaryTable";
 
-const Analytic = () => {
-  const totalSessions = xrSessions.length;
+interface AnalyticProps {
+  sessions: VRSession[];
+}
+
+export default function Analytic({ sessions }: AnalyticProps) {
+  const totalSessions = sessions.length;
+  const uniqueUsers = new Set(sessions.map((s) => s.userId)).size;
   const avgDuration =
     Math.floor(
-      xrSessions.reduce((a, b) => a + b.duration, 0) / xrSessions.length
+      sessions.reduce((acc, cur) => acc + cur.duration, 0) / totalSessions
     ) || 0;
 
   return (
@@ -16,25 +21,26 @@ const Analytic = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
     >
-      <h1 className="text-3xl font-bold">Analitik WebXR Pasien</h1>
+      <h1 className="text-3xl font-bold">Analitik VR Sessions</h1>
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        <StatCard label="Total Sesi XR" value={totalSessions} />
-        <StatCard
-          label="Pasien Unik"
-          value={new Set(xrSessions.map((s) => s.userId)).size}
-        />
-        <StatCard
-          label="Durasi Rata-rata"
-          value={`${Math.floor(avgDuration / 60)}m ${avgDuration % 60}s`}
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="stat bg-base-200 p-4 rounded-lg shadow">
+          <div className="stat-title">Total Sesi</div>
+          <div className="stat-value">{totalSessions}</div>
+        </div>
+        <div className="stat bg-base-200 p-4 rounded-lg shadow">
+          <div className="stat-title">Pasien Unik</div>
+          <div className="stat-value">{uniqueUsers}</div>
+        </div>
+        <div className="stat bg-base-200 p-4 rounded-lg shadow">
+          <div className="stat-title">Durasi Rata-rata</div>
+          <div className="stat-value">
+            {Math.floor(avgDuration / 60)}m {avgDuration % 60}s
+          </div>
+        </div>
       </div>
 
-      {/* Table */}
-      <XRSummaryTable />
+      <XRSummaryTable data={sessions} />
     </motion.div>
   );
-};
-
-export default Analytic;
+}

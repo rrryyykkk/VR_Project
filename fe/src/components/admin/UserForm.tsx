@@ -11,12 +11,14 @@ interface UserFormProps {
 
 const UserForm = ({ onSubmit, onCancel, initialData }: UserFormProps) => {
   const [form, setForm] = useState<User>({
-    name: "",
-    age: 0,
-    gender: "Male",
-    riwayatPendidikan: "",
-    medicalNote: "",
-    ...initialData,
+    id: initialData?.id ?? 0, // default 0 kalau tambah user baru
+    name: initialData?.name ?? "",
+    email: initialData?.email ?? "",
+    password: initialData?.password ?? "",
+    age: initialData?.age ?? 0,
+    gender: initialData?.gender ?? "Male",
+    riwayatPendidikan: initialData?.riwayatPendidikan ?? "",
+    medicalNote: initialData?.medicalNote ?? "",
   });
 
   const handleChange = (
@@ -52,6 +54,26 @@ const UserForm = ({ onSubmit, onCancel, initialData }: UserFormProps) => {
             className="input input-bordered w-full"
           />
         </div>
+        <div className="form-control">
+          <label className="label font-semibold">Email</label>
+          <input
+            name="email"
+            value={form.email}
+            onChange={handleChange}
+            placeholder="Email"
+            className="input input-bordered w-full"
+          />
+        </div>
+        <div className="form-control">
+          <label className="label font-semibold">Password</label>
+          <input
+            name="password"
+            value={form.password}
+            onChange={handleChange}
+            placeholder="Password"
+            className="input input-bordered w-full"
+          />
+        </div>
 
         <div className="form-control">
           <label className="label font-semibold">Age</label>
@@ -84,7 +106,7 @@ const UserForm = ({ onSubmit, onCancel, initialData }: UserFormProps) => {
             name="riwayatPendidikan"
             value={form.riwayatPendidikan}
             onChange={handleChange}
-            placeholder="Room (e.g. A101)"
+            placeholder="Riwayat Pendidikan"
             className="input input-bordered w-full"
           />
         </div>

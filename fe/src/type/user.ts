@@ -7,7 +7,9 @@ export interface User {
   gender: string;
   riwayatPendidikan: string;
   medicalNote: string;
+}
 
+export interface UserVR extends User {
   // status login & VR
   isLoggedIn?: boolean; // true kalau sudah login ke sistem
   isActive?: boolean; // true kalau sedang aktif VR
@@ -16,7 +18,7 @@ export interface User {
   device?: string;
 }
 
-export const dummyUsers: User[] = [
+export const dummyUsers: UserVR[] = [
   {
     id: 1,
     name: "Budi",

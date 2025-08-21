@@ -7,7 +7,7 @@ const menu = [
   { name: "Tentang Kami", link: "/about" },
   { name: "Kontak", link: "/contact" },
   { name: "Donasi", link: "/donation" },
-  { name: "360 View", link: "#" },
+  { name: "360 View", link: "/vr" },
 ];
 
 const NavbarLP = () => {

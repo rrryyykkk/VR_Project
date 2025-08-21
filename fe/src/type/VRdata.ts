@@ -8,14 +8,14 @@ export interface RoomVisit {
 
 export interface MovementLog {
   timestamp: string;
-  cameraX: number;
-  cameraY: number;
-  cameraZ: number;
+  majuMundur: number; // dari camera.position.z
+  naikTurun: number; // dari camera.position.y
+  geserSamping: number; // dari camera.position.x
 }
 
 export interface CameraRotation {
   timestamp: string;
-  rotation: { x: number; y: number; z: number };
+  rotation: { kananKiri: number; atasBawah: number };
 }
 
 export interface Task {
@@ -39,4 +39,24 @@ export interface VRSession {
   movementLogs?: MovementLog[];
   cameraRotations?: CameraRotation[];
   tasks?: Task[];
+}
+
+export type HostpotType = "navigation" | "exit" | "interaction";
+
+export interface HotspotData {
+  targetId: string;
+  position: [number, number, number];
+  direction: [number, number, number];
+  type: HostpotType;
+  name: string;
+  icon?: string;
+  label?: string;
+}
+
+export interface SceneData {
+  id: string;
+  name: string;
+  locationId: string;
+  image: string;
+  hotspots: HotspotData[];
 }

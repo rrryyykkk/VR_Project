@@ -17,6 +17,8 @@ import HistoryPageUsers from "./page/users/HistoryPageUser";
 import Analytic from "./page/admin/Analytic";
 import { adminSessions } from "./data/VRsession";
 import VRSessionAdmin from "./page/admin/VRSessionAdmin";
+import VRViewParent from "./page/landingPage/VRViewParent";
+import VRView from "./page/landingPage/VRView";
 
 const App = () => {
   return (
@@ -54,6 +56,15 @@ const App = () => {
           </LandingPage>
         }
       />
+      <Route
+        path="/vr"
+        element={
+          <LandingPage>
+            <VRViewParent />
+          </LandingPage>
+        }
+      />
+      <Route path="/vr/:locationId" element={<VRView />} />
       {/* auth */}
       <Route path="/login" element={<LoginUsers />} />
       <Route path="/login-admin" element={<LoginAdmin />} />

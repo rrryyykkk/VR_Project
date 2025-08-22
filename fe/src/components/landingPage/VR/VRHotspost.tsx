@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { IoMdNavigate } from "react-icons/io";
 import { SlLogout } from "react-icons/sl";
 import { FaHandPointer } from "react-icons/fa";
+import { FaLocationDot } from "react-icons/fa6";
 import type { HotspotData } from "../../../type/VRdata";
 
 interface HotspotProps {
@@ -22,6 +23,7 @@ export default function Hotspot({ data, onClick }: HotspotProps) {
   if (data.type === "navigation") IconComp = IoMdNavigate;
   else if (data.type === "exit") IconComp = SlLogout;
   else if (data.type === "interaction") IconComp = FaHandPointer;
+  else if (data.type === "location") IconComp = FaLocationDot;
 
   return (
     <group position={data.position}>
@@ -46,7 +48,9 @@ export default function Hotspot({ data, onClick }: HotspotProps) {
                   ? "text-blue-500 text-2xl"
                   : data.type === "exit"
                   ? "text-red-500 text-2xl"
-                  : "text-green-500 text-2xl"
+                  : data.type === "interaction"
+                  ? "text-green-500 text-2xl"
+                  : "text-yellow-500 text-2xl"
               }
             />
           )}

@@ -41,7 +41,7 @@ export interface VRSession {
   tasks?: Task[];
 }
 
-export type HostpotType = "navigation" | "exit" | "interaction";
+export type HostpotType = "navigation" | "exit" | "interaction" | "location";
 
 export interface HotspotData {
   targetId: string;

@@ -1,4 +1,3 @@
-// components/landingPage/VR/VRHotspot.tsx
 import { useCallback } from "react";
 import { Html } from "@react-three/drei";
 import { motion } from "framer-motion";
@@ -30,16 +29,12 @@ export default function Hotspot({ data, onClick }: HotspotProps) {
       <Html center>
         <motion.button
           onClick={handleClick}
-          className="bg-white rounded-full p-3 shadow-md"
+          className="bg-white rounded-full p-3 shadow-md cursor-pointer"
           title={data.name}
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.8, duration: 0.5, ease: "easeOut" }} // delay biar nunggu scene muncul
           whileHover={{ scale: 1.2 }}
-          animate={{ y: [0, -5, 0] }} // floating animation
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            repeatType: "loop",
-            ease: "easeInOut",
-          }}
         >
           {IconComp && (
             <IconComp

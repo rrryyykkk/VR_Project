@@ -1,63 +1,19 @@
-// src/pages/VRView.tsx
-import { Canvas, useThree } from "@react-three/fiber";
+import { Canvas } from "@react-three/fiber";
 import { Suspense, useEffect, useRef, useState } from "react";
-import {
-  useLocation,
-  useParams,
-  // useNavigate
-} from "react-router";
+import { useLocation, useParams } from "react-router";
 import { OrbitControls } from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
-import * as THREE from "three";
+import { motion, AnimatePresence } from "framer-motion";
 
 import Scene from "../../components/landingPage/VR/VRScene";
-import CameraTracker from "../../components/landingPage/VR/CameraTracker";
 import VRFooter from "../../components/landingPage/VR/VRFooterUI";
-
 import type { HotspotData, SceneData } from "../../type/VRdata";
 import { useVRSession } from "../../hooks/VR/useVRSession";
 import Hotspot from "../../components/landingPage/VR/VRHotspost";
 
-// Komponen kecil untuk handle Raycaster
-function RaycastClickLogger() {
-  const { camera, gl, scene } = useThree();
-  const raycaster = useRef(new THREE.Raycaster());
-  const mouse = useRef(new THREE.Vector2());
-
-  useEffect(() => {
-    const handleClick = (event: MouseEvent) => {
-      const rect = gl.domElement.getBoundingClientRect();
-      mouse.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-      raycaster.current.setFromCamera(mouse.current, camera);
-      const intersects = raycaster.current.intersectObjects(
-        scene.children,
-        true
-      );
-
-      if (intersects.length > 0) {
-        const point = intersects[0].point;
-        const pos: [number, number, number] = [
-          parseFloat(point.x.toFixed(1)),
-          parseFloat(point.y.toFixed(1)),
-          parseFloat(point.z.toFixed(1)),
-        ];
-        console.log("Helper clicked position:", ...pos);
-      }
-    };
-
-    gl.domElement.addEventListener("click", handleClick);
-    return () => gl.domElement.removeEventListener("click", handleClick);
-  }, [camera, gl, scene]);
-
-  return null;
-}
-
 export default function VRView() {
   const { locationId } = useParams();
   const { state } = useLocation();
-  // const navigate = useNavigate();
   const views: SceneData[] = state?.views || [];
 
   const [currentSceneIndex, setCurrentSceneIndex] = useState(0);
@@ -65,15 +21,9 @@ export default function VRView() {
 
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
 
-  const [posisiKamera, setPosisiKamera] = useState({
-    majuMundur: 0,
-    naikTurun: 0,
-    geserSamping: 0,
-  });
-
   const [rotasiKamera, setRotasiKamera] = useState({
-    kananKiri: 0,
-    atasBawah: 0,
+    x: 0, // kanan kiri 0 - 360
+    y: 0, // atas bawah 0 - 180
   });
 
   const { logMovement } = useVRSession("guest");
@@ -81,6 +31,7 @@ export default function VRView() {
   const [autoRotate, setAutoRotate] = useState(true);
   const autoRotateTimeout = useRef<number | null>(null);
 
+  // Handle auto rotate pause setelah interaksi user
   useEffect(() => {
     const handleUserInteraction = () => {
       setAutoRotate(false);
@@ -102,6 +53,19 @@ export default function VRView() {
     };
   }, []);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (controlsRef.current) {
+        const x = radToDeg(controlsRef.current.getAzimuthalAngle()); // 0–360
+        const y = radToDeg(controlsRef.current.getPolarAngle()); // 0–180
+        setRotasiKamera({ x, y });
+        logMovement({ majuMundur: 0, naikTurun: 0, geserSamping: 0 }, x, y);
+      }
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [logMovement]);
+
   if (!currentScene) {
     return (
       <div className="text-white p-8">
@@ -113,26 +77,35 @@ export default function VRView() {
   const radToDeg = (rad: number) => ((rad * 180) / Math.PI + 360) % 360;
 
   return (
-    <div className="w-full h-screen bg-black relative">
+    <div className="w-full h-screen bg-black relative overflow-hidden">
+      {/* Animasi overlay fade */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentScene.id}
+          className="absolute inset-0 bg-black z-10 pointer-events-none"
+          initial={{ opacity: 1 }}
+          animate={{ opacity: 0 }}
+          exit={{ opacity: 1 }}
+          transition={{ duration: 1 }}
+        />
+      </AnimatePresence>
+
       <Canvas camera={{ position: [0, 0, 0.1], fov: 75 }}>
         <Suspense fallback={null}>
           {/* Scene panorama 360 */}
           <Scene image={currentScene.image} />
 
-          {/* Hotspot visual */}
+          {/* Hotspot */}
           {currentScene.hotspots?.map((hs: HotspotData, idx: number) => (
             <Hotspot
               key={idx}
               data={hs}
               onClick={() => {
                 if (hs.targetId) {
-                  // pindah ke scene targetId untuk semua type
                   const targetIndex = views.findIndex(
                     (v) => v.id === hs.targetId
                   );
                   if (targetIndex !== -1) setCurrentSceneIndex(targetIndex);
-                } else {
-                  console.log("Hotspot clicked (no targetId):", hs);
                 }
               }}
             />
@@ -145,46 +118,23 @@ export default function VRView() {
             autoRotate={autoRotate}
             autoRotateSpeed={0.3}
           />
-
-          {/* Tracker buat catat posisi & rotasi kamera */}
-          <CameraTracker
-            controlsRef={controlsRef}
-            onCameraMove={(pos) => {
-              setPosisiKamera(pos);
-              if (controlsRef.current) {
-                const kananKiriDeg = radToDeg(
-                  controlsRef.current.getAzimuthalAngle()
-                );
-                const atasBawahDeg = radToDeg(
-                  controlsRef.current.getPolarAngle()
-                );
-                setRotasiKamera({
-                  kananKiri: kananKiriDeg,
-                  atasBawah: atasBawahDeg,
-                });
-                logMovement(pos, kananKiriDeg, atasBawahDeg);
-              }
-            }}
-          />
-
-          {/* Helper logger di console */}
-          <RaycastClickLogger />
         </Suspense>
       </Canvas>
 
-      {/* Footer info kamera */}
+      {/* Derajat kamera di kiri atas */}
+      <div className="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
+        X: {rotasiKamera.x.toFixed(1)}° | Y: {rotasiKamera.y.toFixed(1)}°
+      </div>
+
+      {/* Footer */}
       <VRFooter
-        text={`${
-          currentScene.name || "Virtual Tour"
-        } | Kanan-Kiri: ${rotasiKamera.kananKiri.toFixed(
-          1
-        )}°, Atas-Bawah: ${rotasiKamera.atasBawah.toFixed(
-          1
-        )}° | Maju-Mundur: ${posisiKamera.majuMundur.toFixed(
-          2
-        )}, Naik-Turun: ${posisiKamera.naikTurun.toFixed(
-          2
-        )}, Geser-Samping: ${posisiKamera.geserSamping.toFixed(2)}`}
+        scenes={views.map((v) => ({ id: v.id, name: v.name, image: v.image }))}
+        currentSceneId={currentScene.id}
+        onSelectScene={(id) => {
+          const targetIndex = views.findIndex((v) => v.id === id);
+          if (targetIndex !== -1) setCurrentSceneIndex(targetIndex);
+        }}
+        user={null} // contoh: { name: "Hana", room: "Ruang 1" }
       />
     </div>
   );

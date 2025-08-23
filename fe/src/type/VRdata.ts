@@ -6,16 +6,9 @@ export interface RoomVisit {
   exitTime: string;
 }
 
-export interface MovementLog {
-  timestamp: string;
-  majuMundur: number; // dari camera.position.z
-  naikTurun: number; // dari camera.position.y
-  geserSamping: number; // dari camera.position.x
-}
-
 export interface CameraRotation {
   timestamp: string;
-  rotation: { kananKiri: number; atasBawah: number };
+  rotation: { x: number; y: number };
 }
 
 export interface Task {
@@ -23,6 +16,13 @@ export interface Task {
   taskName: string;
   status: "completed" | "failed" | "pending";
   timeSpent: number; // in seconds
+}
+
+export interface Interaction {
+  id: string;
+  type: "scene" | "hotspot";
+  targetId?: string;
+  timestamp: string;
 }
 
 export interface VRSession {
@@ -36,9 +36,9 @@ export interface VRSession {
   previousSessionId?: string;
   hotspots?: string[];
   roomHistory?: RoomVisit[];
-  movementLogs?: MovementLog[];
   cameraRotations?: CameraRotation[];
   tasks?: Task[];
+  interactions?: Interaction[];
 }
 
 export type HostpotType = "navigation" | "exit" | "interaction" | "location";

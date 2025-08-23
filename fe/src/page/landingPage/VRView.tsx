@@ -10,28 +10,32 @@ import VRFooter from "../../components/landingPage/VR/VRFooterUI";
 import type { HotspotData, SceneData } from "../../type/VRdata";
 import { useVRSession } from "../../hooks/VR/useVRSession";
 import Hotspot from "../../components/landingPage/VR/VRHotspost";
+import VRRecorder, {
+  type VRRecorderHandle,
+} from "../../components/landingPage/VR/VRRecorder";
 
 export default function VRView() {
   const { locationId } = useParams();
   const { state } = useLocation();
   const views: SceneData[] = state?.views || [];
 
+  // scene start/exit
+  const startSceneIds = ["29", "30", "39", "40"];
+  const exitSceneIds = ["27", "28", "41", "42", "44"];
+
   const [currentSceneIndex, setCurrentSceneIndex] = useState(0);
   const currentScene: SceneData | null = views[currentSceneIndex] || null;
 
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
+  const recorderRef = useRef<VRRecorderHandle | null>(null);
 
-  const [rotasiKamera, setRotasiKamera] = useState({
-    x: 0, // kanan kiri 0 - 360
-    y: 0, // atas bawah 0 - 180
-  });
-
+  const [rotasiKamera, setRotasiKamera] = useState({ x: 0, y: 0 });
   const { logMovement } = useVRSession("guest");
 
   const [autoRotate, setAutoRotate] = useState(true);
   const autoRotateTimeout = useRef<number | null>(null);
 
-  // Handle auto rotate pause setelah interaksi user
+  // pause autoRotate saat user interaksi
   useEffect(() => {
     const handleUserInteraction = () => {
       setAutoRotate(false);
@@ -53,16 +57,17 @@ export default function VRView() {
     };
   }, []);
 
+  // ambil rotasi kamera setiap 100ms (untuk display dan analytics lain)
   useEffect(() => {
     const interval = setInterval(() => {
       if (controlsRef.current) {
-        const x = radToDeg(controlsRef.current.getAzimuthalAngle()); // 0–360
-        const y = radToDeg(controlsRef.current.getPolarAngle()); // 0–180
+        const x = radToDeg(controlsRef.current.getAzimuthalAngle());
+        const y = radToDeg(controlsRef.current.getPolarAngle());
         setRotasiKamera({ x, y });
+        // optional analytics lain
         logMovement({ majuMundur: 0, naikTurun: 0, geserSamping: 0 }, x, y);
       }
     }, 100);
-
     return () => clearInterval(interval);
   }, [logMovement]);
 
@@ -78,7 +83,7 @@ export default function VRView() {
 
   return (
     <div className="w-full h-screen bg-black relative overflow-hidden">
-      {/* Animasi overlay fade */}
+      {/* Fade transition */}
       <AnimatePresence mode="wait">
         <motion.div
           key={currentScene.id}
@@ -92,7 +97,7 @@ export default function VRView() {
 
       <Canvas camera={{ position: [0, 0, 0.1], fov: 75 }}>
         <Suspense fallback={null}>
-          {/* Scene panorama 360 */}
+          {/* Panorama 360 */}
           <Scene image={currentScene.image} />
 
           {/* Hotspot */}
@@ -106,6 +111,9 @@ export default function VRView() {
                     (v) => v.id === hs.targetId
                   );
                   if (targetIndex !== -1) setCurrentSceneIndex(targetIndex);
+
+                  // log interaksi hotspot
+                  recorderRef.current?.logInteraction("hotspot", hs.targetId);
                 }
               }}
             />
@@ -121,10 +129,20 @@ export default function VRView() {
         </Suspense>
       </Canvas>
 
-      {/* Derajat kamera di kiri atas */}
+      {/* info derajat kamera */}
       <div className="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
         X: {rotasiKamera.x.toFixed(1)}° | Y: {rotasiKamera.y.toFixed(1)}°
       </div>
+
+      {/* Recorder */}
+      <VRRecorder
+        ref={recorderRef}
+        currentSceneId={currentScene.id}
+        currentSceneName={currentScene.name}
+        rotation={rotasiKamera}
+        startSceneIds={startSceneIds}
+        exitSceneIds={exitSceneIds}
+      />
 
       {/* Footer */}
       <VRFooter
@@ -133,8 +151,11 @@ export default function VRView() {
         onSelectScene={(id) => {
           const targetIndex = views.findIndex((v) => v.id === id);
           if (targetIndex !== -1) setCurrentSceneIndex(targetIndex);
+
+          // log interaksi scene
+          recorderRef.current?.logInteraction("scene", id);
         }}
-        user={null} // contoh: { name: "Hana", room: "Ruang 1" }
+        user={null}
       />
     </div>
   );

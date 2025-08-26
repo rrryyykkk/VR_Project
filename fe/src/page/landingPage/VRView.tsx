@@ -1,7 +1,7 @@
 import { Canvas } from "@react-three/fiber";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router";
-import { OrbitControls } from "@react-three/drei";
+import { OrbitControls, useProgress } from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -18,8 +18,10 @@ export default function VRView() {
   const { locationId } = useParams();
   const { state } = useLocation();
   const views: SceneData[] = state?.views || [];
+  // ambil status loading (progress dari drei)
+  const { progress } = useProgress();
+  const isLoaded = progress === 100;
 
-  // scene start/exit
   const startSceneIds = ["29", "30", "39", "40"];
   const exitSceneIds = ["27", "28", "41", "42", "44"];
 
@@ -57,15 +59,14 @@ export default function VRView() {
     };
   }, []);
 
-  // ambil rotasi kamera setiap 100ms (untuk display dan analytics lain)
+  // ambil rotasi kamera setiap 100ms
   useEffect(() => {
     const interval = setInterval(() => {
       if (controlsRef.current) {
         const x = radToDeg(controlsRef.current.getAzimuthalAngle());
         const y = radToDeg(controlsRef.current.getPolarAngle());
         setRotasiKamera({ x, y });
-        // optional analytics lain
-        logMovement({ majuMundur: 0, naikTurun: 0, geserSamping: 0 }, x, y);
+        logMovement(x, y);
       }
     }, 100);
     return () => clearInterval(interval);
@@ -97,29 +98,27 @@ export default function VRView() {
 
       <Canvas camera={{ position: [0, 0, 0.1], fov: 75 }}>
         <Suspense fallback={null}>
-          {/* Panorama 360 */}
+          {/* Panorama */}
           <Scene image={currentScene.image} />
 
-          {/* Hotspot */}
-          {currentScene.hotspots?.map((hs: HotspotData, idx: number) => (
-            <Hotspot
-              key={idx}
-              data={hs}
-              onClick={() => {
-                if (hs.targetId) {
-                  const targetIndex = views.findIndex(
-                    (v) => v.id === hs.targetId
-                  );
-                  if (targetIndex !== -1) setCurrentSceneIndex(targetIndex);
+          {/* Hotspot muncul setelah scene selesai load */}
+          {isLoaded &&
+            currentScene.hotspots?.map((hs: HotspotData, idx: number) => (
+              <Hotspot
+                key={`${currentScene.id}-${idx}`} // key unik per scene
+                data={hs}
+                onClick={() => {
+                  if (hs.targetId) {
+                    const targetIndex = views.findIndex(
+                      (v) => v.id === hs.targetId
+                    );
+                    if (targetIndex !== -1) setCurrentSceneIndex(targetIndex);
+                    recorderRef.current?.logInteraction("hotspot", hs.targetId);
+                  }
+                }}
+              />
+            ))}
 
-                  // log interaksi hotspot
-                  recorderRef.current?.logInteraction("hotspot", hs.targetId);
-                }
-              }}
-            />
-          ))}
-
-          {/* Orbit Controls */}
           <OrbitControls
             ref={controlsRef}
             enableZoom={false}
@@ -151,8 +150,6 @@ export default function VRView() {
         onSelectScene={(id) => {
           const targetIndex = views.findIndex((v) => v.id === id);
           if (targetIndex !== -1) setCurrentSceneIndex(targetIndex);
-
-          // log interaksi scene
           recorderRef.current?.logInteraction("scene", id);
         }}
         user={null}

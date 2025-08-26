@@ -17,7 +17,6 @@ export default function Hotspot({ data, onClick }: HotspotProps) {
     onClick();
   }, [onClick]);
 
-  // pilih icon sesuai type
   let IconComp;
   if (data.type === "navigation") IconComp = IoMdNavigate;
   else if (data.type === "exit") IconComp = SlLogout;
@@ -33,7 +32,7 @@ export default function Hotspot({ data, onClick }: HotspotProps) {
           title={data.name}
           initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.8, duration: 0.5, ease: "easeOut" }} // delay biar nunggu scene muncul
+          transition={{ delay: 0.5, duration: 0.4, ease: "easeOut" }}
           whileHover={{ scale: 1.2 }}
         >
           {IconComp && (

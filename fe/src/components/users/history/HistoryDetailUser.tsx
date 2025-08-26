@@ -1,7 +1,6 @@
+// src/components/user/history/HistoryDetailUser.tsx
 import type { VRSession } from "../../../type/VRdata";
 import {
-  AreaChart,
-  Area,
   LineChart,
   Line,
   XAxis,
@@ -26,23 +25,10 @@ function normalizeDegree(angle: number): number {
 }
 
 export default function HistoryDetailUser({ session, onClose }: Props) {
-  const movementData = (session.movementLogs || []).map((log) => {
-    const distance = Math.sqrt(
-      Math.pow(log.cameraX, 2) +
-        Math.pow(log.cameraY, 2) +
-        Math.pow(log.cameraZ, 2)
-    );
-    return {
-      timestamp: new Date(log.timestamp).toLocaleTimeString(),
-      movement: distance,
-    };
-  });
-
   const rotationData = (session.cameraRotations || []).map((rot) => ({
     timestamp: new Date(rot.timestamp).toLocaleTimeString(),
     upDown: normalizeDegree(rot.rotation.x),
     leftRight: normalizeDegree(rot.rotation.y),
-    tilt: normalizeDegree(rot.rotation.z),
   }));
 
   return (
@@ -114,34 +100,6 @@ export default function HistoryDetailUser({ session, onClose }: Props) {
         </div>
       )}
 
-      {/* Chart Movement */}
-      {movementData.length > 0 && (
-        <div>
-          <h3 className="font-semibold text-lg mb-2">🚶 Pergerakan Kamera</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={movementData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="timestamp" tick={{ fontSize: 12 }} />
-              <YAxis tick={{ fontSize: 12 }} />
-              <Tooltip
-                formatter={(value) =>
-                  typeof value === "number" ? `${value.toFixed(2)} m` : value
-                }
-              />
-              <Legend wrapperStyle={{ fontSize: "14px" }} />
-              <Area
-                type="monotone"
-                dataKey="movement"
-                stroke="#4A90E2"
-                fill="#4A90E2"
-                name="Pergerakan (m)"
-                fillOpacity={0.3}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-
       {/* Chart Rotasi */}
       {rotationData.length > 0 && (
         <div>
@@ -169,17 +127,12 @@ export default function HistoryDetailUser({ session, onClose }: Props) {
                 stroke="#F5A623"
                 name="Gerakan Kiri–Kanan"
               />
-              <Line
-                type="monotone"
-                dataKey="tilt"
-                stroke="#50E3C2"
-                name="Miring Kepala"
-              />
             </LineChart>
           </ResponsiveContainer>
         </div>
       )}
 
+      {/* Tombol kembali */}
       <div className="flex justify-end">
         <motion.button
           whileHover={{ scale: 1.05 }}

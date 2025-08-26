@@ -6,6 +6,12 @@ export interface RoomVisit {
   exitTime: string;
 }
 
+export interface MovementLog {
+  timestamp: string;
+  position: [number, number, number];
+  rotation: { x: number; y: number };
+}
+
 export interface CameraRotation {
   timestamp: string;
   rotation: { x: number; y: number };
@@ -36,6 +42,7 @@ export interface VRSession {
   previousSessionId?: string;
   hotspots?: string[];
   roomHistory?: RoomVisit[];
+  movementLogs?: MovementLog[];
   cameraRotations?: CameraRotation[];
   tasks?: Task[];
   interactions?: Interaction[];

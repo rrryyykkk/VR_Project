@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { CameraRotation, MovementLog, VRSession } from "../../type/VRdata";
+import type { CameraRotation, VRSession } from "../../type/VRdata";
 
 export function useVRSession(userId = "guest") {
   const [session, setSession] = useState<VRSession>({
@@ -10,7 +10,6 @@ export function useVRSession(userId = "guest") {
     duration: 0,
     hotspots: [],
     roomHistory: [],
-    movementLogs: [],
     cameraRotations: [],
     tasks: [],
   });
@@ -31,27 +30,14 @@ export function useVRSession(userId = "guest") {
     }));
   };
 
-  const logMovement = (
-    pos: { majuMundur: number; naikTurun: number; geserSamping: number },
-    kananKiri: number,
-    atasBawah: number
-  ) => {
+  const logMovement = (x: number, y: number) => {
     setSession((prev) => ({
       ...prev,
-      movementLogs: [
-        ...(prev.movementLogs || []),
-        {
-          timestamp: new Date().toISOString(),
-          majuMundur: pos.majuMundur,
-          naikTurun: pos.naikTurun,
-          geserSamping: pos.geserSamping,
-        } as MovementLog,
-      ],
       cameraRotations: [
         ...(prev.cameraRotations || []),
         {
           timestamp: new Date().toISOString(),
-          rotation: { kananKiri, atasBawah },
+          rotation: { x, y },
         } as CameraRotation,
       ],
     }));

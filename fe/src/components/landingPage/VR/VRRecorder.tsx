@@ -16,7 +16,7 @@ interface VRRecorderProps {
   rotation: { x: number; y: number };
   startSceneIds: string[];
   exitSceneIds: string[];
-  onAllowEnterScene?: () => void; // 🔹 callback ke parent
+  onAllowEnterScene?: () => void; // callback ke parent
 }
 
 export type VRRecorderHandle = {
@@ -33,7 +33,7 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
       rotation,
       startSceneIds,
       exitSceneIds,
-      onAllowEnterScene, // 🔹
+      onAllowEnterScene,
     },
     ref
   ) => {
@@ -43,6 +43,7 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
     const sessionRef = useRef<VRSession | null>(null);
     const lastSceneRef = useRef<{ id: string; name: string } | null>(null);
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const dismissedStartScenes = useRef<Set<string>>(new Set());
 
     const [showModal, setShowModal] = useState<{
       type: "start" | "stop";
@@ -59,20 +60,34 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
       return () => window.removeEventListener("beforeunload", handleUnload);
     }, []);
 
-    // Tampilkan modal start/stop saat masuk/keluar aula
+    // Modal start/stop
     useEffect(() => {
       if (!currentSceneId) return;
 
-      if (startSceneIds.includes(currentSceneId) && !recording) {
+      // ✅ kalau user masuk exitSceneIds
+      if (exitSceneIds.includes(currentSceneId)) {
+        if (recording) {
+          // kalau sedang recording → tanya stop
+          setShowModal({ type: "stop", open: true });
+        } else {
+          // kalau tidak recording → langsung lewat (tanpa modal stop)
+          dismissedStartScenes.current.clear(); // reset supaya nanti masuk lagi tetap ditanya
+          onAllowEnterScene?.();
+        }
+        return;
+      }
+
+      // ✅ kalau user masuk startSceneIds
+      if (
+        startSceneIds.includes(currentSceneId) &&
+        !recording &&
+        !dismissedStartScenes.current.has(currentSceneId)
+      ) {
         setShowModal({ type: "start", open: true });
       }
+    }, [currentSceneId, recording, startSceneIds, exitSceneIds, onAllowEnterScene]);
 
-      if (exitSceneIds.includes(currentSceneId) && recording) {
-        setShowModal({ type: "stop", open: true });
-      }
-    }, [currentSceneId, recording, startSceneIds, exitSceneIds]);
-
-    // Fungsi simpan rotasi ke session
+    // Simpan rotasi tiap detik
     const recordRotation = useCallback(() => {
       if (!sessionRef.current) return;
       const newRotation: CameraRotation = {
@@ -88,8 +103,7 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
         duration: Math.max(
           0,
           Math.floor(
-            (Date.now() - new Date(sessionRef.current.startTime).getTime()) /
-              1000
+            (Date.now() - new Date(sessionRef.current.startTime).getTime()) / 1000
           )
         ),
       };
@@ -98,7 +112,7 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     }, [rotation]);
 
-    // Interval tiap 1 detik → tetap jalan kalau recording
+    // Interval record rotasi
     useEffect(() => {
       if (!recording) return;
       intervalRef.current = setInterval(recordRotation, 1000);
@@ -107,7 +121,7 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
       };
     }, [recording, recordRotation]);
 
-    // Catat roomHistory saat ganti scene + rekam snapshot
+    // Catat roomHistory
     useEffect(() => {
       if (!recording || !sessionRef.current || !currentSceneId) return;
 
@@ -175,9 +189,7 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
       setShowModal((p) => ({ ...p, open: false }));
 
       recordRotation();
-
-      // 🔹 kasih tahu parent: boleh masuk scene
-      if (onAllowEnterScene) onAllowEnterScene();
+      onAllowEnterScene?.();
     };
 
     const handleStopRecord = () => {
@@ -202,8 +214,7 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
           0,
           Math.floor(
             (new Date(stopIso).getTime() -
-              new Date(sessionRef.current.startTime).getTime()) /
-              1000
+              new Date(sessionRef.current.startTime).getTime()) / 1000
           )
         ),
         roomHistory: closedHistory,
@@ -214,15 +225,14 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
       sessionRef.current = finished;
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(finished));
       setShowModal((p) => ({ ...p, open: false }));
-
-      // 🔹 keluar aula tetap lanjut scene
-      if (onAllowEnterScene) onAllowEnterScene();
+      dismissedStartScenes.current.clear();
+      onAllowEnterScene?.();
     };
 
     // Expose logInteraction
     useImperativeHandle(ref, () => ({
       logInteraction(type: "scene" | "hotspot", targetId: string) {
-        if (!sessionRef.current || !recording) return; // hanya log jika sedang recording
+        if (!sessionRef.current || !recording) return;
         const updated: VRSession = {
           ...sessionRef.current,
           interactions: [
@@ -277,9 +287,15 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
                   </button>
                   <button
                     onClick={() => {
-                      setShowModal((p) => ({ ...p, open: false }));
-                      // 🔹 User pilih Tidak → tetap masuk scene
-                      if (onAllowEnterScene) onAllowEnterScene();
+                      if (showModal.type === "start") {
+                        dismissedStartScenes.current.add(currentSceneId);
+                        setShowModal((p) => ({ ...p, open: false }));
+                        onAllowEnterScene?.();
+                      } else {
+                        // ❌ jangan stop record kalau pilih "Tidak" di modal stop
+                        setShowModal((p) => ({ ...p, open: false }));
+                        onAllowEnterScene?.();
+                      }
                     }}
                     className="px-4 py-2 bg-gray-400 text-white rounded"
                   >

@@ -13,16 +13,15 @@ import {
 interface RotationGraphProps {
   data: {
     timestamp: string;
-    rotation: { x: number; y: number; z: number };
+    rotation: { x: number; y: number };
   }[];
 }
 
 export const RotationGraph = ({ data }: RotationGraphProps) => {
   const formatted = data.map((item) => ({
     time: new Date(item.timestamp).toLocaleTimeString(),
-    x: item.rotation.x,
-    y: item.rotation.y,
-    z: item.rotation.z,
+    x: Number(item.rotation.x.toFixed(2)),
+    y: Number(item.rotation.y.toFixed(2)),
   }));
 
   return (
@@ -35,19 +34,13 @@ export const RotationGraph = ({ data }: RotationGraphProps) => {
         <XAxis dataKey="time" />
         <YAxis />
         <Tooltip
-          formatter={(value) => {
-            if (Array.isArray(value)) {
-              return value
-                .map((v) => (typeof v === "number" ? `${v}°` : v))
-                .join(", ");
-            }
-            return value != null ? `${value}°` : "";
-          }}
+          formatter={(value) =>
+            typeof value === "number" ? `${value}°` : value
+          }
         />
         <Legend />
         <Line type="monotone" dataKey="x" stroke="#8884d8" name="Rotasi X" />
         <Line type="monotone" dataKey="y" stroke="#82ca9d" name="Rotasi Y" />
-        <Line type="monotone" dataKey="z" stroke="#ffc658" name="Rotasi Z" />
       </LineChart>
     </ResponsiveContainer>
   );

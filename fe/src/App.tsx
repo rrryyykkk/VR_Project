@@ -3,7 +3,6 @@ import Home from "./page/landingPage/Home";
 import About from "./page/landingPage/About";
 import Contact from "./page/landingPage/Contact";
 import LandingPage from "./layout/LandingPageLayout";
-import Donation from "./page/landingPage/Donation";
 import ProfilePageUser from "./page/users/ProfilePageUser";
 import AdminLayout from "./layout/AdminLayout";
 import Dashboard from "./page/admin/Dashboard";
@@ -19,6 +18,7 @@ import { adminSessions } from "./data/VRsession";
 import VRSessionAdmin from "./page/admin/VRSessionAdmin";
 import VRViewParent from "./page/landingPage/VRViewParent";
 import VRView from "./page/landingPage/VRView";
+import Insight from "./page/landingPage/Insight";
 
 const App = () => {
   return (
@@ -49,10 +49,10 @@ const App = () => {
         }
       />
       <Route
-        path="/donation"
+        path="/insight"
         element={
           <LandingPage>
-            <Donation />
+            <Insight />
           </LandingPage>
         }
       />

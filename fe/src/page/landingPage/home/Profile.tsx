@@ -1,36 +1,81 @@
 import { motion } from "framer-motion";
-import { FaHandsHelping, FaLeaf, FaHeart } from "react-icons/fa";
+import { FaBrain, FaVrCardboard, FaRobot, FaDatabase } from "react-icons/fa";
 import { useInView } from "react-intersection-observer";
+// SEO Helmet
+import { Helmet } from "react-helmet";
 
 const features = [
   {
-    icon: <FaHandsHelping size={30} className="text-fuchsia-600" />,
-    title: "Perawatan Peduli",
+    icon: <FaVrCardboard size={30} className="text-fuchsia-600" />,
+    title: "Virtual Reality Therapy",
     description:
-      "Memberikan perawatan penuh kasih dan kepedulian kepada lansia dengan pendekatan personal.",
+      "Menggunakan teknologi Virtual Reality untuk melatih dan menstimulasi fungsi neurokognitif lansia secara imersif.",
   },
   {
-    icon: <FaLeaf size={30} className="text-green-600" />,
-    title: "Lingkungan Asri",
+    icon: <FaBrain size={30} className="text-green-600" />,
+    title: "Neurocognitive Analysis",
     description:
-      "Lingkungan panti yang bersih, hijau, dan nyaman sehingga lansia merasa seperti di rumah sendiri.",
+      "Menganalisis kondisi neurokognitif lansia dengan pendekatan berbasis data untuk diagnosis lebih akurat.",
   },
   {
-    icon: <FaHeart size={30} className="text-pink-600" />,
-    title: "Kegiatan Positif",
+    icon: <FaDatabase size={30} className="text-pink-600" />,
+    title: "Data Recording & Monitoring",
     description:
-      "Beragam aktivitas positif untuk menjaga semangat dan kebahagiaan penghuni setiap harinya.",
+      "MIND Platform merekam data kesehatan dan respon pasien, memungkinkan pemantauan yang lebih komprehensif.",
+  },
+  {
+    icon: <FaRobot size={30} className="text-indigo-600" />,
+    title: "Machine Learning Diagnosis",
+    description:
+      "Menggunakan kecerdasan buatan untuk mengolah data pasien sehingga menghasilkan diagnosis cerdas dan adaptif.",
   },
 ];
 
 const Profile = () => {
   const [ref, inView] = useInView({
-    triggerOnce: false, // akan aktif setiap scroll muncul
+    triggerOnce: false,
     threshold: 0.2,
   });
 
   return (
-    <section ref={ref} className="py-16 px-4 max-w-6xl mx-auto">
+    <section
+      ref={ref}
+      className="py-16 px-4 max-w-6xl mx-auto"
+      aria-labelledby="mind-platform-title"
+    >
+      {/* SEO Meta Tags */}
+      <Helmet>
+        <title>
+          MIND Platform - Penelitian Mixedreality Neurocognitive Diagnosis
+          dengan VR & Machine Learning
+        </title>
+        <meta
+          name="description"
+          content="MIND Platform (Mixedreality Intelligent Neurocognitive Diagnosis) adalah penelitian di PPSLU yang memanfaatkan Virtual Reality, data recording, dan machine learning untuk mendukung diagnosis pintar serta meningkatkan kualitas hidup lansia."
+        />
+        <meta
+          name="keywords"
+          content="MIND Platform, Mixedreality, Neurocognitive Diagnosis, VR Health, Machine Learning, PPSLU, penelitian lansia, teknologi kesehatan"
+        />
+        {/* Structured Data untuk Google */}
+        <script type="application/ld+json">{`
+          {
+            "@context": "https://schema.org",
+            "@type": "ResearchProject",
+            "name": "MIND Platform (Mixedreality Intelligent Neurocognitive Diagnosis)",
+            "description": "Penelitian di PPSLU yang memanfaatkan teknologi Virtual Reality, data recording, dan machine learning untuk mendukung diagnosis cerdas neurokognitif pada lansia.",
+            "keywords": ["MIND Platform", "Mixedreality", "VR Therapy", "Neurocognitive Diagnosis", "Machine Learning", "PPSLU"],
+            "author": {
+              "@type": "Organization",
+              "name": "Pusat Pelayanan Sosial Lanjut Usia (PPSLU)"
+            },
+            "areaServed": "Indonesia",
+            "applicationCategory": "HealthApplication",
+            "instrument": ["Virtual Reality", "Machine Learning", "Data Recording System"]
+          }
+        `}</script>
+      </Helmet>
+
       <div className="grid md:grid-cols-2 gap-10 items-center">
         {/* Kiri: Gambar */}
         <motion.div
@@ -41,7 +86,7 @@ const Profile = () => {
         >
           <img
             src="/bg.jpg"
-            alt="Panti Jompo Harapan Sejahtera"
+            alt="Penelitian MIND Platform menggunakan VR dan Machine Learning di PPSLU untuk diagnosis neurokognitif"
             className="w-full h-full object-cover hover:scale-105 transition duration-500"
           />
         </motion.div>
@@ -53,15 +98,25 @@ const Profile = () => {
           transition={{ duration: 0.8 }}
           className="space-y-6"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-fuchsia-600">
-            Profil Panti Jompo Harapan Sejahtera
-          </h2>
+          <h1
+            id="mind-platform-title"
+            className="text-3xl md:text-4xl font-bold text-fuchsia-600"
+          >
+            MIND Platform (Mixedreality Intelligent Neurocognitive Diagnosis)
+          </h1>
           <p className="text-gray-700 leading-relaxed">
-            Kami memberikan perawatan terbaik bagi lansia dengan kasih sayang,
-            lingkungan yang nyaman, serta berbagai kegiatan positif yang
-            mendukung kesejahteraan dan kebahagiaan mereka.
+            <strong>MIND Platform</strong> merupakan hasil penelitian di{" "}
+            <strong>Pusat Pelayanan Sosial Lanjut Usia (PPSLU)</strong> yang
+            menggabungkan <em>Virtual Reality</em>, rekaman data, serta{" "}
+            <em>machine learning</em> untuk mendukung analisis neurokognitif dan
+            diagnosis cerdas. Tujuannya adalah membantu deteksi dini,
+            pemantauan, serta meningkatkan kualitas hidup lansia melalui
+            teknologi kesehatan berbasis penelitian.
           </p>
 
+          <h2 className="text-2xl font-semibold text-gray-800 mt-6">
+            Fitur Utama MIND Platform
+          </h2>
           <div className="space-y-4">
             {features.map((feature, index) => (
               <motion.div

@@ -1,31 +1,31 @@
 import { motion } from "framer-motion";
-import { FaUserNurse, FaUtensils, FaHeartbeat, FaSmile } from "react-icons/fa";
+import { FaVrCardboard, FaBrain, FaDatabase, FaRobot } from "react-icons/fa";
 import { useInView } from "react-intersection-observer";
 
 const services = [
   {
-    icon: <FaUserNurse size={30} className="text-fuchsia-600" />,
-    title: "Perawatan 24 Jam",
+    icon: <FaVrCardboard size={30} className="text-fuchsia-600" />,
+    title: "Virtual Reality Therapy",
     description:
-      "Perawatan intensif selama 24 jam oleh tenaga profesional dengan kasih sayang dan empati.",
+      "Menggunakan teknologi Virtual Reality untuk melatih fungsi kognitif lansia dengan pengalaman interaktif yang imersif.",
   },
   {
-    icon: <FaUtensils size={30} className="text-fuchsia-600" />,
-    title: "Nutrisi Seimbang",
+    icon: <FaBrain size={30} className="text-fuchsia-600" />,
+    title: "Neurocognitive Assessment",
     description:
-      "Menyediakan makanan bergizi dan seimbang sesuai dengan kebutuhan dan kondisi kesehatan penghuni.",
+      "Menganalisis kondisi neurokognitif secara real-time untuk mendukung diagnosis dini pada lansia.",
   },
   {
-    icon: <FaHeartbeat size={30} className="text-fuchsia-600" />,
-    title: "Pemeriksaan Kesehatan",
+    icon: <FaDatabase size={30} className="text-fuchsia-600" />,
+    title: "Data Recording & Monitoring",
     description:
-      "Pemeriksaan kesehatan rutin oleh tenaga medis untuk memastikan kondisi kesehatan penghuni tetap optimal.",
+      "Merekam dan memantau data kesehatan serta respons pengguna untuk mendukung penelitian berbasis bukti di PPSLU.",
   },
   {
-    icon: <FaSmile size={30} className="text-fuchsia-600" />,
-    title: "Kegiatan Rekreasi",
+    icon: <FaRobot size={30} className="text-fuchsia-600" />,
+    title: "Machine Learning Support",
     description:
-      "Beragam aktivitas rekreasi untuk menjaga semangat dan suasana hati positif penghuni setiap harinya.",
+      "Menggunakan kecerdasan buatan untuk mengolah data hasil terapi sehingga diagnosis menjadi lebih cerdas dan akurat.",
   },
 ];
 
@@ -36,19 +36,31 @@ const Service = () => {
   });
 
   return (
-    <section ref={ref} className="py-16 px-4 max-w-6xl mx-auto">
+    <section
+      ref={ref}
+      className="py-16 px-4 max-w-6xl mx-auto"
+      aria-labelledby="mind-services-title"
+    >
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
         transition={{ duration: 0.8 }}
         className="text-center mb-12"
       >
-        <h2 className="text-3xl md:text-4xl font-bold mb-4 text-fuchsia-600">
-          Layanan Kami
+        <h2
+          id="mind-services-title"
+          className="text-3xl md:text-4xl font-bold mb-4 text-fuchsia-600"
+        >
+          Layanan & Fitur MIND Platform
         </h2>
         <p className="max-w-2xl mx-auto text-gray-600">
-          Kami menyediakan layanan terbaik untuk memastikan penghuni mendapatkan
-          perawatan, kenyamanan, dan kebahagiaan setiap hari.
+          <strong>
+            MIND (Mixedreality Intelligent Neurocognitive Diagnosis)
+          </strong>
+          merupakan platform penelitian di <strong>PPSLU</strong> yang memadukan
+          <em>Virtual Reality</em>, rekaman data, dan <em>machine learning</em>
+          untuk mendukung diagnosis cerdas, pemantauan kesehatan, serta
+          peningkatan kualitas hidup lansia.
         </p>
       </motion.div>
 

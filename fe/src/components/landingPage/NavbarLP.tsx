@@ -6,7 +6,7 @@ const menu = [
   { name: "Home", link: "/" },
   { name: "Tentang Kami", link: "/about" },
   { name: "Kontak", link: "/contact" },
-  { name: "Donasi", link: "/donation" },
+  { name: "Insight", link: "/insight" },
   { name: "360 View", link: "/vr" },
 ];
 
@@ -32,7 +32,10 @@ const NavbarLP = () => {
         }`}
       >
         {/* Left Logo */}
-        <div className="flex p-5 font-bold text-lg text-white">Logo</div>
+        <div className="flex p-5 font-bold text-2xl text-teal-400">
+          M<span className="text-fuchsia-600">I</span>N
+          <span className="text-fuchsia-600">D</span>
+        </div>
 
         {/* Right Menu */}
         <div className="flex p-5 justify-end items-center space-x-4">

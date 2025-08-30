@@ -15,13 +15,16 @@ interface Props {
   onSave: (updated: Profile) => void;
 }
 
+/**
+ * Input dengan icon di kiri
+ */
 const IconInput = ({
   label,
   icon: Icon,
   ...props
 }: {
   label: string;
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>; // ✅ fix typing
 } & React.InputHTMLAttributes<HTMLInputElement>) => (
   <div className="space-y-1">
     <label className="block text-gray-700 font-medium text-sm">{label}</label>
@@ -29,14 +32,16 @@ const IconInput = ({
       <Icon className="absolute left-3 top-3 text-gray-400" />
       <input
         {...props}
-        className="input input-bordered w-full pl-10 focus:outline-none focus:ring-2 focus:ring-pink-400"
+        className={`input input-bordered w-full pl-10 focus:outline-none focus:ring-2 focus:ring-pink-400 ${
+          props.className || ""
+        }`}
       />
     </div>
   </div>
 );
 
 export default function EditFormProfileUser({ profile, onSave }: Props) {
-  const [form, setForm] = useState(profile);
+  const [form, setForm] = useState<Profile>(profile);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 

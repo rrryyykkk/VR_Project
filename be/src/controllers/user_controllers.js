@@ -1,6 +1,12 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
-import { parse } from "dotenv";
+import validator from "validator";
+import dotenv from "dotenv";
+import jwt from "jsonwebtoken";
+import { uploadToCloudinary } from "../utils/cloudinary.js";
+import { comparePW, hashPW } from "../utils/hashPW.js";
+
+dotenv.config();
 
 const prisma = new PrismaClient();
 
@@ -119,12 +125,12 @@ export const editUserAdmin = async (req, res) => {
           .json({ message: "Old password is required to change password" });
       }
 
-      const isMatch = await bcrypt.compare(oldPassword, user.password);
+      const isMatch = await comparePW(oldPassword, user.password);
       if (!isMatch) {
         return res.status(400).json({ message: "Old password is incorrect" });
       }
 
-      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+      const hashedNewPassword = await hashPW(newPassword, 12);
       updatedData.password = hashedNewPassword;
     }
 
@@ -173,6 +179,110 @@ export const deleteUserAdmin = async (req, res) => {
 // ----------------- UPDATE USER SENDIRI -----------------
 export const updateUser = async (req, res) => {
   try {
+    const userId = req.user.id;
+    let {
+      email,
+      fullName,
+      age,
+      gender,
+      educationHistory,
+      medicalNote,
+      oldPassword,
+      newPassword,
+    } = req.body;
+
+    // 1. Validasi dasar
+    if (email && !validator.isEmail(email)) {
+      return res.status(400).json({ message: "Invalid email format" });
+    }
+
+    if (newPassword && newPassword.length < 8) {
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 8 characters" });
+    }
+
+    if (age && !validator.isInt(age.toString(), { min: 1, max: 120 })) {
+      return res.status(400).json({ message: "Invalid age value" });
+    }
+
+    // 2. Cari user
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // 3. Persiapkan data update
+    let updatedData = {};
+
+    if (email && email !== user.email) {
+      const emailExists = await prisma.user.findUnique({ where: { email } });
+      if (emailExists) {
+        return res.status(409).json({ message: "Email already exists" });
+      }
+      updatedData.email = validator.normalizeEmail(email);
+    }
+
+    if (fullName) updatedData.fullName = validator.escape(fullName);
+    if (educationHistory)
+      updatedData.educationHistory = validator.escape(educationHistory);
+    if (medicalNote) updatedData.medicalNote = validator.escape(medicalNote);
+
+    if (age) updatedData.age = parseInt(age, 10);
+    if (gender) {
+      if (!["lakiLaki", "perempuan"].includes(gender)) {
+        return res.status(400).json({ message: "Invalid gender" });
+      }
+      updatedData.gender = gender;
+    }
+
+    // 4. Ubah password kalau diminta
+    if (newPassword) {
+      if (!oldPassword) {
+        return res
+          .status(400)
+          .json({ message: "Old password is required to change password" });
+      }
+
+      const isMatch = await comparePW(oldPassword, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ message: "Old password is incorrect" });
+      }
+
+      const hashedNewPassword = await hashPW(newPassword, 12); // pakai cost 12
+      updatedData.password = hashedNewPassword;
+    }
+
+    // 5. Upload image
+    if (req.file) {
+      try {
+        const imageUrl = await uploadToCloudinary(req.file.buffer);
+        updatedData.imgProfile = imageUrl;
+      } catch (err) {
+        console.error("Cloudinary error:", err);
+        return res.status(400).json({ message: "Failed to upload image" });
+      }
+    }
+
+    // 6. Update DB
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: updatedData,
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        age: true,
+        gender: true,
+        educationHistory: true,
+        medicalNote: true,
+        imgProfile: true,
+        updatedAt: true,
+      },
+    });
+
+    res.status(200).json({
+      message: "User updated successfully",
+      user: updatedUser,
+    });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
   }

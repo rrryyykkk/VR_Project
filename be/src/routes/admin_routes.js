@@ -5,12 +5,20 @@ import {
   getMeAdmin,
 } from "../controllers/admin_controllers.js";
 import { upload } from "../utils/multer.js";
+import { rateLimiter } from "../middlewares/rate_limiter.js";
 
 const router = express.Router();
 
-router.get("/getMeAdmin", authMiddleware, adminMiddleware, getMeAdmin);
+router.get(
+  "/getMeAdmin",
+  rateLimiter,
+  authMiddleware,
+  adminMiddleware,
+  getMeAdmin
+);
 router.put(
   "/updateAdmin",
+  rateLimiter,
   authMiddleware,
   adminMiddleware,
   upload,

@@ -7,11 +7,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
 enum Role {
   admin
   user
 }
 
+// 🔹 Admin bisa lihat semua user & banyak sesi
 model Admin {
   id         String   @id @default(cuid())
   email      String   @unique
@@ -26,11 +28,13 @@ model Admin {
   users      User[]
 }
 
+// 🔹 Gender
 enum Gender {
   lakiLaki
   perempuan
 }
 
+// 🔹 User hanya bisa lihat dirinya sendiri
 model User {
   id         String   @id @default(cuid())
   adminId    String
@@ -50,4 +54,90 @@ model User {
 
   // Relasi ke admin
   admin      Admin @relation(fields: [adminId], references: [id])
+  vrSession  VRSession[]
+}
+
+
+// 🔹 VR Session
+
+model VRSession {
+  sessionId String   @id @default(cuid())
+
+  // Relasi ke user
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  startTime DateTime 
+  endTime   DateTime
+  duration  Int
+  device    String?
+  previousSessionId String?
+
+  // relasi
+  cameraRotations CameraRotation[]
+  tasks Task[]
+  roomHistory RoomVisit[]
+  interactions Interaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+}
+
+// 🔹 Camera Rotation
+
+model CameraRotation {
+  id String @id @default(cuid())
+
+  timeStamp DateTime
+  rotX      Float
+  rotY      Float
+
+  // Relasi ke VR Session
+  sessionId String
+  session   VRSession @relation(fields: [sessionId], references: [sessionId], onDelete: Cascade)
+}
+
+// 🔹 status Task
+enum Status {
+  completed
+  failed
+  pending
+}
+
+// 🔹 Task
+model Task {
+  id String @id @default(cuid())
+  taskId String
+  taskName String
+  status Status
+  timeSpent Int
+
+  // Relasi ke VR Session
+  sessionId String
+  session   VRSession @relation(fields: [sessionId], references: [sessionId], onDelete: Cascade)
+}
+
+// 🔹 Room Visit
+model RoomVisit {
+  id String @id @default(cuid())
+  roomId String
+  roomName String
+  enterTime DateTime
+  exitTime DateTime
+
+  // Relasi ke VR Session
+  sessionId String
+  session   VRSession @relation(fields: [sessionId], references: [sessionId], onDelete: Cascade)
+}
+
+// 🔹 Interaction
+model Interaction {
+  id String @id @default(cuid())
+  type String
+  targetId String?
+  timestamp DateTime
+
+  // Relasi ke VR Session
+  sessionId String
+  session   VRSession @relation(fields: [sessionId], references: [sessionId], onDelete: Cascade)
 }

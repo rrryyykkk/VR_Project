@@ -27,8 +27,10 @@ export const getMeAdmin = async (req, res) => {
 
 export const editProfileAdmin = async (req, res) => {
   try {
-    const { fullName, email, oldPassword, newPassword, imgProfile } = req.body;
-    console.log("req.body:", req.body);
+    const { fullName, userName, email, oldPassword, newPassword, imgProfile } =
+      req.body;
+    console.log(req.body);
+    console.log(req.file);
 
     // ambil data dari JWT
     const admin = await prisma.admin.findUnique({
@@ -45,10 +47,19 @@ export const editProfileAdmin = async (req, res) => {
     if (req.file) {
       const imgUrl = await uploadToCloudinary(req.file.buffer, "imgProfile");
       updateData.imgProfile = imgUrl;
-    } else if (imgProfile) {
+    } else if (imgProfile && imgProfile.startsWith("http")) {
       updateData.imgProfile = imgProfile;
     }
-    console.log("imgProfile:", imgProfile);
+
+    // update userName hrs cek apakah userName itu dah dipake ap blm
+    if (userName) {
+      const userNameExists = await prisma.admin.findUnique({
+        where: { userName },
+      });
+      if (userNameExists)
+        return res.status(409).json({ message: "Username already exists" });
+      updateData.userName = userName;
+    }
 
     // update email butuh oldPassword
     if (email) {
@@ -77,6 +88,7 @@ export const editProfileAdmin = async (req, res) => {
       select: {
         id: true,
         email: true,
+        userName: true,
         fullName: true,
         role: true,
         imgProfile: true,

@@ -1,6 +1,6 @@
 import express from "express";
-import { isActiveVr } from "../controllers/activity_controllers";
-import { authMiddleware } from "../middlewares/auth";
+import { isActiveVr } from "../controllers/activity_controllers.js";
+import { authMiddleware } from "../middlewares/auth.js";
 
 const router = express.Router();
 

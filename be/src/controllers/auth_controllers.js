@@ -15,14 +15,16 @@ const validRoles = ["admin", "user"];
 
 // ----------------- REGISTER ADMIN -----------------
 export const registerAdmin = async (req, res) => {
-  const { email, password, fullName, role, imgProfile } = req.body;
+  const { email, password, userName, fullName, role, imgProfile } = req.body;
 
   try {
     // Validasi input
-    if (!email || !password || !fullName)
+    if (!email || !password || !fullName || !userName)
       return res
         .status(400)
-        .json({ message: "Email, password, and fullName are required" });
+        .json({
+          message: "Email, password,userName and fullName are required",
+        });
 
     if (!validator.isEmail(email))
       return res.status(400).json({ message: "Invalid email format" });
@@ -44,6 +46,12 @@ export const registerAdmin = async (req, res) => {
     if (exists)
       return res.status(409).json({ message: "Email already registered" });
 
+    const userNameExists = await prisma.admin.findUnique({
+      where: { userName },
+    });
+    if (userNameExists)
+      return res.status(409).json({ message: "Username already registered" });
+
     // Hash password
     const hashed = await hashPW(password);
 
@@ -52,6 +60,7 @@ export const registerAdmin = async (req, res) => {
       data: {
         email,
         password: hashed,
+        userName,
         fullName,
         role: finalRole,
         imgProfile: imgProfile || "",

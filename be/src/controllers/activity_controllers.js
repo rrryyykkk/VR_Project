@@ -37,3 +37,48 @@ export const isActiveVr = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export const addTaskForUserByAdmin = async (req, res) => {
+  try {
+    const { userId, sessionId, taskId, taskName, timeSpent } = req.body;
+
+    // validasi input
+    if (!userId || !sessionId || !taskId || !taskName || !timeSpent) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    // pastikan user ada
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { sessions: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // pastikan session milik user tersebut
+    const session = await prisma.vRSession.findUnique({
+      where: { sessionId },
+    });
+
+    if (!session || session.userId !== userId) {
+      return res.status(404).json({ message: "Session not found" });
+    }
+
+    const task = await prisma.task.create({
+      data: {
+        taskId: taskId.trim(),
+        taskName: taskName.trim(),
+        timeSpent: timeSpent || 0,
+        status: "pending",
+        sessionId,
+      },
+    });
+
+    return res.status(201).json({ message: "Task added", task });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

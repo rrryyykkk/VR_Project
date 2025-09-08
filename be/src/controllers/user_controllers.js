@@ -45,16 +45,27 @@ export const createUserAdmin = async (req, res) => {
       email,
       password,
       fullName,
+      userName,
       age,
       gender,
       educationHistory,
       medicalNote,
     } = req.body;
 
-    if (!email || !password || !fullName)
-      return res
-        .status(400)
-        .json({ message: "Email, password, and fullName are required" });
+    if (!email || !password || !fullName || !userName)
+      return res.status(400).json({
+        message: "Email, password,userName and fullName are required",
+      });
+
+    const exists = await prisma.user.findUnique({ where: { email } });
+    if (exists)
+      return res.status(409).json({ message: "Email already exists" });
+
+    const userNameExists = await prisma.user.findUnique({
+      where: { userName },
+    });
+    if (userNameExists)
+      return res.status(409).json({ message: "Username already exists" });
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
@@ -64,6 +75,7 @@ export const createUserAdmin = async (req, res) => {
         email,
         password: hashedPassword,
         fullName,
+        userName,
         age: age ? parseInt(age, 10) : null,
         gender,
         educationHistory,
@@ -89,6 +101,7 @@ export const editUserAdmin = async (req, res) => {
     const {
       email,
       fullName,
+      userName,
       age,
       gender,
       educationHistory,
@@ -103,6 +116,7 @@ export const editUserAdmin = async (req, res) => {
     let updatedData = {
       email,
       fullName,
+      userName,
       age,
       gender,
       educationHistory,
@@ -114,6 +128,16 @@ export const editUserAdmin = async (req, res) => {
       const emailExists = await prisma.user.findUnique({ where: { email } });
       if (emailExists) {
         return res.status(409).json({ message: "Email already exists" });
+      }
+    }
+
+    // kalau userName diubah, cek duplikat
+    if (userName && userName !== user.userName) {
+      const userNameExists = await prisma.user.findUnique({
+        where: { userName },
+      });
+      if (userNameExists) {
+        return res.status(409).json({ message: "Username already exists" });
       }
     }
 
@@ -183,6 +207,7 @@ export const updateUser = async (req, res) => {
     let {
       email,
       fullName,
+      userName,
       age,
       gender,
       educationHistory,
@@ -219,6 +244,16 @@ export const updateUser = async (req, res) => {
         return res.status(409).json({ message: "Email already exists" });
       }
       updatedData.email = validator.normalizeEmail(email);
+    }
+
+    if (userName && userName !== user.userName) {
+      const userNameExists = await prisma.user.findUnique({
+        where: { userName },
+      });
+      if (userNameExists) {
+        return res.status(409).json({ message: "Username already exists" });
+      }
+      updatedData.userName = validator.escape(userName);
     }
 
     if (fullName) updatedData.fullName = validator.escape(fullName);
@@ -269,6 +304,7 @@ export const updateUser = async (req, res) => {
       select: {
         id: true,
         email: true,
+        userName: true,
         fullName: true,
         age: true,
         gender: true,
@@ -283,6 +319,30 @@ export const updateUser = async (req, res) => {
       message: "User updated successfully",
       user: updatedUser,
     });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// ----------------- GET USER SENDIRI -----------------
+export const getMeUser = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.status(404).json({ message: "Unauthorized" });
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        age: true,
+        gender: true,
+        imgProfile: true,
+      },
+    });
+    if (!user) return res.status(404).json({ message: "User not found" });
+    return res.status(200).json(user);
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
   }

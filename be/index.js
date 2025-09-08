@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
+import cors from "cors";
 // routes
 import authRoutesAdmin from "./src/routes/authAdmin_routes.js";
 import authRoutesUser from "./src/routes/authUser_routes.js";
@@ -22,6 +23,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cspMiddleware);
 app.use(helmetMiddleware);
+
+// CORS
+app.use(cors({ origin: "http://localhost:5317", credentials: true }));
 
 // Routes
 app.use("/api/auth/admin", authRoutesAdmin);

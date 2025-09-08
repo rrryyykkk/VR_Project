@@ -7,8 +7,10 @@ import {
   FiLogOut,
   FiMenu,
 } from "react-icons/fi";
-import { NavLink } from "react-router";
+import { NavLink, useNavigate } from "react-router";
 import { TbBadgeVr } from "react-icons/tb";
+import { useAuthStore } from "../../app/store/AuthStore";
+import { useToast } from "../../hooks/ToastContext";
 
 const SidebarAdmin = ({
   isOpen,
@@ -17,6 +19,20 @@ const SidebarAdmin = ({
   isOpen: boolean;
   setIsOpen: (val: boolean) => void;
 }) => {
+  const navigate = useNavigate();
+  const { logoutAdmin } = useAuthStore();
+  const { addToast } = useToast();
+
+  const handleLogout = async () => {
+    try {
+      await logoutAdmin();
+      addToast("Logout berhasil!", "success");
+      navigate("/login-admin");
+    } catch {
+      addToast("Logout gagal!", "error");
+    }
+  };
+
   const menuItems = [
     { name: "Dashboard", icon: <FiHome />, path: "/admin" },
     { name: "Users", icon: <FiUsers />, path: "/admin/users" },
@@ -66,7 +82,7 @@ const SidebarAdmin = ({
       </div>
 
       <button
-        onClick={() => alert("Logging out...")}
+        onClick={handleLogout}
         className={`flex items-center cursor-pointer ${
           isOpen ? "gap-3 justify-start" : "justify-center"
         } p-3 rounded hover:bg-red-600 hover:text-white transition-colors mt-4`}

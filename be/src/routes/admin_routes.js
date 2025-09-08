@@ -21,7 +21,7 @@ router.put(
   rateLimiter,
   authMiddleware,
   adminMiddleware,
-  upload,
+  upload.single("imgProfile"),
   editProfileAdmin
 );
 

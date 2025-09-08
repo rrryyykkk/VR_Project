@@ -1,23 +1,29 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useToast } from "../../../hooks/ToastContext";
 
 interface Profile {
-  username: string;
+  userName: string;
   fullName: string;
   email: string;
-  profileImage: string;
-  password: string;
+  imgProfile: string;
 }
 
 interface Props {
   profile: Profile;
-  onSave: (updated: Profile) => void;
+  onSave: (formData: FormData) => Promise<void> | void;
 }
 
 export default function EditFormProfile({ profile, onSave }: Props) {
-  const [form, setForm] = useState(profile);
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [form, setForm] = useState({
+    ...profile,
+    newPassword: "",
+    oldPassword: "",
+  });
   const [showPassword, setShowPassword] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+
+  const { addToast } = useToast();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -27,22 +33,44 @@ export default function EditFormProfile({ profile, onSave }: Props) {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setForm({ ...form, profileImage: reader.result as string });
+        setForm({ ...form, imgProfile: reader.result as string });
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (form.password !== confirmPassword) {
-      alert("Password tidak cocok!");
-      return;
+    try {
+      const formData = new FormData();
+      formData.append("userName", form.userName);
+      formData.append("fullName", form.fullName);
+      formData.append("email", form.email);
+
+      if (form.oldPassword) {
+        formData.append("oldPassword", form.oldPassword);
+      }
+      if (form.newPassword) {
+        formData.append("newPassword", form.newPassword);
+      }
+      if (file) {
+        formData.append("imgProfile", file); // upload file
+      } else if (form.imgProfile.startsWith("http")) {
+        formData.append("imgProfile", form.imgProfile); // kirim link
+      }
+
+      await onSave(formData);
+      addToast("Profil berhasil diperbarui!", "success");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        addToast(error.message, "error");
+      } else {
+        addToast("Terjadi kesalahan saat update profil", "error");
+      }
     }
-    onSave(form);
-    alert("Profil berhasil diperbarui!");
   };
 
   return (
@@ -57,26 +85,20 @@ export default function EditFormProfile({ profile, onSave }: Props) {
 
       {/* Username */}
       <div className="form-control">
-        <label htmlFor="username" className="label pb-1">
-          <span className="label-text text-base">Username</span>
-        </label>
+        <label className="label pb-1">Username</label>
         <input
-          id="username"
           type="text"
-          name="username"
+          name="userName"
           className="input input-bordered w-full"
-          value={form.username}
+          value={form.userName}
           onChange={handleChange}
         />
       </div>
 
       {/* Full Name */}
       <div className="form-control">
-        <label htmlFor="fullName" className="label pb-1">
-          <span className="label-text text-base">Nama Lengkap</span>
-        </label>
+        <label className="label pb-1">Nama Lengkap</label>
         <input
-          id="fullName"
           type="text"
           name="fullName"
           className="input input-bordered w-full"
@@ -87,11 +109,8 @@ export default function EditFormProfile({ profile, onSave }: Props) {
 
       {/* Email */}
       <div className="form-control">
-        <label htmlFor="email" className="label pb-1">
-          <span className="label-text text-base">Email</span>
-        </label>
+        <label className="label pb-1">Email</label>
         <input
-          id="email"
           type="email"
           name="email"
           className="input input-bordered w-full"
@@ -100,46 +119,27 @@ export default function EditFormProfile({ profile, onSave }: Props) {
         />
       </div>
 
-      {/* Profile Image */}
+      {/* Old Password */}
       <div className="form-control">
-        <label htmlFor="profileImage" className="label pb-1">
-          <span className="label-text text-base">Foto Profil</span>
-        </label>
+        <label className="label pb-1">Password Lama</label>
         <input
-          id="profileImage"
-          type="file"
-          accept="image/*"
-          onChange={handleImageChange}
-          className="file-input file-input-bordered w-full"
-        />
-      </div>
-
-      {/* Password */}
-      <div className="form-control">
-        <label htmlFor="password" className="label pb-1">
-          <span className="label-text text-base">Password Baru</span>
-        </label>
-        <input
-          id="password"
           type={showPassword ? "text" : "password"}
-          name="password"
+          name="oldPassword"
           className="input input-bordered w-full"
-          value={form.password}
+          value={form.oldPassword}
           onChange={handleChange}
         />
       </div>
 
-      {/* Confirm Password */}
+      {/* New Password */}
       <div className="form-control">
-        <label htmlFor="confirmPassword" className="label pb-1">
-          <span className="label-text text-base">Konfirmasi Password</span>
-        </label>
+        <label className="label pb-1">Password Baru</label>
         <input
-          id="confirmPassword"
           type={showPassword ? "text" : "password"}
+          name="newPassword"
           className="input input-bordered w-full"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
+          value={form.newPassword}
+          onChange={handleChange}
         />
       </div>
 
@@ -156,7 +156,42 @@ export default function EditFormProfile({ profile, onSave }: Props) {
         </label>
       </div>
 
-      {/* Submit Button */}
+      {/* Profile Image - Upload */}
+      <div className="form-control">
+        <label className="label pb-1">Upload Foto Profil</label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+          className="file-input file-input-bordered w-full"
+        />
+      </div>
+
+      {/* OR pakai link */}
+      <div className="form-control">
+        <label className="label pb-1">Link Foto Profil</label>
+        <input
+          type="text"
+          name="imgProfile"
+          placeholder="https://example.com/profile.jpg"
+          className="input input-bordered w-full"
+          value={form.imgProfile}
+          onChange={handleChange}
+        />
+      </div>
+
+      {/* Preview */}
+      {form.imgProfile && (
+        <div className="flex justify-center">
+          <img
+            src={form.imgProfile}
+            alt="Preview"
+            className="w-24 h-24 rounded-full object-cover border"
+          />
+        </div>
+      )}
+
+      {/* Submit */}
       <div className="pt-2">
         <button type="submit" className="btn btn-primary w-full">
           Simpan Perubahan

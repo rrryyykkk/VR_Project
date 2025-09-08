@@ -1,16 +1,33 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { useAuthStore } from "../../app/store/AuthStore";
+import { useToast } from "../../hooks/ToastContext";
+import { FiEye, FiEyeOff } from "react-icons/fi"; // 👈 import icon
 
 const LoginAdmin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // 👈 state buat toggle
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { addToast } = useToast();
+  const { loginAdmin, loading, error } = useAuthStore();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: autentikasi admin
-    console.log("Admin login:", { email, password });
+
+    // memanggil loginAdmin yang mengembalikan boolean
+    const success = await loginAdmin({ email, password });
+
+    if (success) {
+      addToast("Login berhasil!", "success");
+      navigate("/admin", { replace: true }); // redirect ke admin
+    } else {
+      // ambil error dari store
+      const errorMessage = useAuthStore.getState().error || "Login gagal!";
+      addToast(errorMessage, "error");
+    }
   };
 
   return (
@@ -34,22 +51,6 @@ const LoginAdmin = () => {
         className="bg-white shadow-2xl rounded-3xl p-8 md:p-12 w-11/12 max-w-md z-10 border border-blue-100"
       >
         <div className="text-center mb-6">
-          <div className="flex justify-center mb-3">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-12 w-12 text-blue-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 11c0-1.105-.895-2-2-2s-2 .895-2 2 .895 2 2 2 2-.895 2-2zm-2 2v6m4-10v10m-6-6h6"
-              />
-            </svg>
-          </div>
           <h2 className="text-2xl md:text-3xl font-bold text-blue-700">
             Admin Area
           </h2>
@@ -71,27 +72,40 @@ const LoginAdmin = () => {
             />
           </div>
 
-          <div>
+          <div className="relative">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Password
             </label>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"} // 👈 toggle type
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300"
+              className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 pr-10"
               placeholder="********"
             />
+            {/* 👁️ icon toggle */}
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-9 text-gray-500 hover:text-blue-600 cursor-pointer"
+            >
+              {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+            </button>
           </div>
 
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold py-2 rounded-xl hover:brightness-110 transition cursor-pointer"
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold py-2 rounded-xl hover:brightness-110 transition cursor-pointer disabled:opacity-60"
           >
-            Login
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
+
+        {error && (
+          <p className="mt-4 text-red-500 text-sm text-center">{error}</p>
+        )}
 
         <div className="text-center mt-6">
           <button

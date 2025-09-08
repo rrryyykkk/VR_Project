@@ -4,8 +4,8 @@ import {
   getAllVRSession,
   getOneVRSession,
   getSessionByUser,
-} from "../controllers/vrSesion_controllers";
-import { adminMiddleware, authMiddleware } from "../middlewares/auth";
+} from "../controllers/vrSesion_controllers.js";
+import { adminMiddleware, authMiddleware } from "../middlewares/auth.js";
 
 const router = express.Router();
 

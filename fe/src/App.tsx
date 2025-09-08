@@ -19,8 +19,11 @@ import VRSessionAdmin from "./page/admin/VRSessionAdmin";
 import VRViewParent from "./page/landingPage/VRViewParent";
 import VRView from "./page/landingPage/VRView";
 import Insight from "./page/landingPage/Insight";
+import ProtectedRoute from "./middleware/ProtectedRoutes";
+import { useHydrateAuth } from "./hooks/useHydrateAuth";
 
 const App = () => {
+  useHydrateAuth();
   return (
     <Routes>
       {/* landing page */}
@@ -69,71 +72,75 @@ const App = () => {
       <Route path="/login" element={<LoginUsers />} />
       <Route path="/login-admin" element={<LoginAdmin />} />
       {/* admin */}
-      <Route
-        path="/admin"
-        element={
-          <AdminLayout>
-            <Dashboard />
-          </AdminLayout>
-        }
-      />
-      <Route
-        path="/admin/users"
-        element={
-          <AdminLayout>
-            <UsersPage />
-          </AdminLayout>
-        }
-      />
-      <Route
-        path="/admin/analytics"
-        element={
-          <AdminLayout>
-            <Analytic sessions={adminSessions} />
-          </AdminLayout>
-        }
-      />
-      <Route
-        path="/admin/analytics/:id"
-        element={
-          <AdminLayout>
-            <AnalyticById />
-          </AdminLayout>
-        }
-      />
-      <Route
-        path="/admin/profile"
-        element={
-          <AdminLayout>
-            <ProfilePage />
-          </AdminLayout>
-        }
-      />
-      <Route
-        path="/admin/VrAdmin"
-        element={
-          <AdminLayout>
-            <VRSessionAdmin />
-          </AdminLayout>
-        }
-      />
+      <Route element={<ProtectedRoute role="admin" />}>
+        <Route
+          path="/admin"
+          element={
+            <AdminLayout>
+              <Dashboard />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <AdminLayout>
+              <UsersPage />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/analytics"
+          element={
+            <AdminLayout>
+              <Analytic sessions={adminSessions} />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/analytics/:id"
+          element={
+            <AdminLayout>
+              <AnalyticById />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/profile"
+          element={
+            <AdminLayout>
+              <ProfilePage />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/VrAdmin"
+          element={
+            <AdminLayout>
+              <VRSessionAdmin />
+            </AdminLayout>
+          }
+        />
+      </Route>
       {/* users */}
-      <Route
-        path="/profile"
-        element={
-          <UsersLayout>
-            <ProfilePageUser />
-          </UsersLayout>
-        }
-      />
-      <Route
-        path="/users/history"
-        element={
-          <UsersLayout>
-            <HistoryPageUsers />
-          </UsersLayout>
-        }
-      />
+      <Route element={<ProtectedRoute role="user" />}>
+        <Route
+          path="/profile"
+          element={
+            <UsersLayout>
+              <ProfilePageUser />
+            </UsersLayout>
+          }
+        />
+        <Route
+          path="/users/history"
+          element={
+            <UsersLayout>
+              <HistoryPageUsers />
+            </UsersLayout>
+          }
+        />
+      </Route>
     </Routes>
   );
 };

@@ -1,13 +1,15 @@
+// VRSessionAdmin.tsx
 import { useState } from "react";
-import { adminSessions } from "../../data/VRsession";
-import { dummyUsers, type User } from "../../type/user";
-import type { VRSession } from "../../type/VRdata";
 import { motion, AnimatePresence } from "framer-motion";
+import { adminSessions } from "../../data/VRsession";
+import { type UserVR } from "../../type/user";
+import type { VRSession } from "../../type/VRdata";
+import { useAllUsers } from "../../app/store/UserStore";
 
-const isSessionActive = (session: VRSession) => {
-  const now = new Date();
-  return new Date(session.startTime) <= now && now <= new Date(session.endTime);
-};
+// Extend VRSession dengan isActive
+interface VRSessionActive extends VRSession {
+  isActive?: boolean;
+}
 
 const formatDuration = (seconds: number) => {
   const m = Math.floor(seconds / 60);
@@ -16,14 +18,24 @@ const formatDuration = (seconds: number) => {
 };
 
 const VRSessionAdmin = () => {
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [selectedSession, setSelectedSession] = useState<VRSession | null>(
-    null
-  );
+  const [selectedUser, setSelectedUser] = useState<UserVR | null>(null);
+  const [selectedSession, setSelectedSession] =
+    useState<VRSessionActive | null>(null);
 
-  const getActiveSessionByUser = (userId: number): VRSession | null => {
+  const {
+    data: users = [],
+    isLoading,
+    isError,
+  } = useAllUsers() as {
+    data: UserVR[];
+    isLoading: boolean;
+    isError: boolean;
+  };
+
+  // Ambil sesi VR aktif berdasarkan user
+  const getActiveSessionByUser = (userId: string): VRSessionActive | null => {
     const sessions = adminSessions
-      .filter((s) => s.userId === userId.toString() && isSessionActive(s))
+      .filter((s: VRSessionActive) => s.userId === userId && s.isActive)
       .sort(
         (a, b) =>
           new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
@@ -31,7 +43,7 @@ const VRSessionAdmin = () => {
     return sessions.length > 0 ? sessions[0] : null;
   };
 
-  const getLastRoomName = (session: VRSession | null): string => {
+  const getLastRoomName = (session: VRSessionActive | null): string => {
     if (!session?.roomHistory?.length) return "-";
     const sortedRooms = [...session.roomHistory].sort(
       (a, b) =>
@@ -40,10 +52,10 @@ const VRSessionAdmin = () => {
     return sortedRooms[0].roomName;
   };
 
-  const openUserDetail = (user: User) => {
+  const openUserDetail = (user: UserVR) => {
     setSelectedUser(user);
     const activeSession = getActiveSessionByUser(user.id);
-    setSelectedSession(activeSession);
+    setSelectedSession(activeSession); // Hanya ambil session yang isActive
   };
 
   const closeModal = () => {
@@ -51,11 +63,13 @@ const VRSessionAdmin = () => {
     setSelectedSession(null);
   };
 
+  if (isLoading) return <p>Loading users...</p>;
+  if (isError) return <p>Gagal memuat data user</p>;
+
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <h1 className="text-3xl font-bold mb-6">Monitoring Sesi Pengguna</h1>
 
-      {/* Table */}
       <table className="w-full table-auto border-collapse border border-gray-300">
         <thead>
           <tr className="bg-gray-100">
@@ -84,9 +98,8 @@ const VRSessionAdmin = () => {
           </tr>
         </thead>
         <tbody>
-          {dummyUsers.map((user) => {
+          {users.map((user) => {
             const activeSession = getActiveSessionByUser(user.id);
-            const isActive = !!activeSession;
             const lastRoom = getLastRoomName(activeSession);
 
             return (
@@ -96,7 +109,7 @@ const VRSessionAdmin = () => {
                 onClick={() => openUserDetail(user)}
               >
                 <td className="border border-gray-300 px-4 py-2">
-                  {user.name}
+                  {user.fullName}
                 </td>
                 <td className="border border-gray-300 px-4 py-2">
                   {user.email}
@@ -109,15 +122,17 @@ const VRSessionAdmin = () => {
                 </td>
                 <td
                   className={`border border-gray-300 px-4 py-2 text-center font-semibold ${
-                    isActive ? "text-green-700" : "text-red-500"
+                    user.isLogin ? "text-green-700" : "text-red-500"
                   }`}
                 >
-                  {isActive ? "Sedang Login" : "Tidak Login"}
+                  {user.isLogin ? "Sedang Login" : "Tidak Login"}
                 </td>
                 <td className="border border-gray-300 px-4 py-2">
                   {activeSession?.device || "-"}
                 </td>
-                <td className="border border-gray-300 px-4 py-2">{lastRoom}</td>
+                <td className="border border-gray-300 px-4 py-2">
+                  {activeSession ? lastRoom : "-"}
+                </td>
                 <td className="border border-gray-300 px-4 py-2 text-center text-blue-600 underline">
                   Lihat Detail
                 </td>
@@ -127,9 +142,9 @@ const VRSessionAdmin = () => {
         </tbody>
       </table>
 
-      {/* Modal with Framer Motion */}
+      {/* Modal */}
       <AnimatePresence>
-        {(selectedUser || selectedSession) && (
+        {selectedUser && (
           <motion.div
             className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50"
             initial={{ opacity: 0 }}
@@ -152,10 +167,12 @@ const VRSessionAdmin = () => {
               </button>
 
               <h2 className="text-2xl font-bold mb-4">
-                Sesi Login {selectedUser?.name}
+                Sesi VR {selectedUser.fullName}
               </h2>
 
-              {!selectedSession && <p>Pengguna ini sedang tidak login.</p>}
+              {!selectedSession && (
+                <p>Pengguna ini sedang tidak aktif di VR.</p>
+              )}
 
               {selectedSession && (
                 <>
@@ -180,7 +197,7 @@ const VRSessionAdmin = () => {
 
                   <div className="mt-4">
                     <strong>Ruang yang Dikunjungi:</strong>
-                    {selectedSession?.roomHistory?.length ? (
+                    {selectedSession.roomHistory?.length ? (
                       <ul className="list-disc list-inside">
                         {selectedSession.roomHistory.map((room) => (
                           <li key={room.roomId}>

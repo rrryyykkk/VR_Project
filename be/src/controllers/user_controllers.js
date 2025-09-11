@@ -19,6 +19,7 @@ export const getAllUserByAdmin = async (req, res) => {
       select: {
         id: true,
         email: true,
+        userName: true,
         fullName: true,
         role: true,
         age: true,
@@ -51,6 +52,7 @@ export const createUserAdmin = async (req, res) => {
       educationHistory,
       medicalNote,
     } = req.body;
+    console.log(req.body);
 
     if (!email || !password || !fullName || !userName)
       return res.status(400).json({
@@ -71,17 +73,20 @@ export const createUserAdmin = async (req, res) => {
 
     const user = await prisma.user.create({
       data: {
-        adminId,
         email,
         password: hashedPassword,
         fullName,
         userName,
-        age: age ? parseInt(age, 10) : null,
-        gender,
+        age: age ? parseInt(age, 10) : 0, // default 0 kalau kosong
+        gender, // enum Gender: 'lakiLaki' | 'perempuan'
         educationHistory,
         medicalNote,
+        admin: {
+          connect: { id: adminId }, // ✅ konek ke admin yang sudah ada
+        },
       },
     });
+    console.log("user yg sudah dibuat", user);
     res.status(201).json({
       message: "User created successfully",
       user,

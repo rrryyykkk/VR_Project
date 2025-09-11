@@ -1,82 +1,89 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import UserForm from "../../components/admin/UserForm";
-import { Toast } from "../../components/common/Toast";
-import type { User } from "../../type/user";
 import UserTable from "../../components/admin/table/UserTable";
+import { Toast } from "../../components/common/Toast";
+import type { User, UserPayload } from "../../type/user";
 
-const dummyUsers: User[] = [
-  {
-    id: 1,
-    name: "Budi",
-    email: "budi@gmail.com",
-    password: "default123",
-    age: 74,
-    gender: "Laki-Laki",
-    riwayatPendidikan: "SMA",
-    medicalNote: "Diabetes",
-  },
-  {
-    id: 2,
-    name: "Siti",
-    email: "siti@gmail.com",
-    password: "default123",
-    age: 69,
-    gender: "Perempuan",
-    riwayatPendidikan: "D3",
-    medicalNote: "Hipertensi",
-  },
-];
+import {
+  useAllUsers,
+  useCreateUserAdmin,
+  useEditUserAdmin,
+  useDeleteUserAdmin,
+} from "../../app/store/UserStore";
 
 const UsersPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: "success" | "error";
   } | null>(null);
-
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isAddMode, setIsAddMode] = useState(false);
-  const queryClient = useQueryClient();
 
-  const { data: users = dummyUsers } = useQuery<User[]>({
-    queryKey: ["users"],
-    queryFn: async () => dummyUsers,
-  });
+  // 🔹 Hooks
+  const { data: users = [], isLoading } = useAllUsers();
+  const createMutation = useCreateUserAdmin();
 
-  const updateMutation = useMutation({
-    mutationFn: async (user: User) => user,
-    onSuccess: (data) => {
-      queryClient.setQueryData(["users"], (old: User[] | undefined) => {
-        const filtered = old?.filter((u) => u.id !== data.id) || [];
-        return [...filtered, data];
-      });
-      setToast({ message: "Data berhasil disimpan", type: "success" });
-      setSelectedUser(null);
-      setIsAddMode(false);
-    },
-    onError: () => setToast({ message: "Gagal menyimpan data", type: "error" }),
-  });
+  const editMutation = useEditUserAdmin();
+  const deleteMutation = useDeleteUserAdmin();
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: number) => id,
-    onSuccess: (id) => {
-      queryClient.setQueryData(
-        ["users"],
-        (old: User[] | undefined) => old?.filter((u) => u.id !== id) || []
-      );
-      setToast({ message: "Penghuni dihapus", type: "success" });
-    },
-    onError: () => setToast({ message: "Gagal menghapus data", type: "error" }),
-  });
-
+  // 🔹 Handle Submit (Add or Edit)
   const handleSubmit = (user: User) => {
-    const data = user.id ? user : { ...user, id: Date.now() };
-    updateMutation.mutate(data);
+    // 🔹 Siapkan payload JSON
+    const payload: UserPayload = {
+      fullName: user.fullName,
+      userName: user.userName,
+      imgProfile: user.imgProfile,
+      email: user.email,
+      password: user.password,
+      age: user.age,
+      gender: user.gender,
+      educationHistory: user.educationHistory,
+      medicalNote: user.medicalNote,
+    };
+
+    console.log("payload", payload);
+    if (user.id) {
+      // Edit user
+      editMutation.mutate(
+        { id: user.id, payload },
+        {
+          onSuccess: () => {
+            setToast({ message: "User berhasil diperbarui", type: "success" });
+            setSelectedUser(null);
+            setIsAddMode(false);
+          },
+          onError: () =>
+            setToast({ message: "Gagal memperbarui user", type: "error" }),
+        }
+      );
+    } else {
+      // Add user
+      createMutation.mutate(payload, {
+        onSuccess: (data) => {
+          console.log("Response", data);
+          setToast({ message: "User berhasil ditambahkan", type: "success" });
+          setIsAddMode(false);
+        },
+        onError: () =>
+          setToast({ message: "Gagal menambahkan user", type: "error" }),
+      });
+    }
+  };
+
+  // 🔹 Handle Delete
+  const handleDelete = (id: string) => {
+    deleteMutation.mutate(id, {
+      onSuccess: () =>
+        setToast({ message: "User berhasil dihapus", type: "success" }),
+      onError: () =>
+        setToast({ message: "Gagal menghapus user", type: "error" }),
+    });
   };
 
   return (
     <div className="p-4 sm:p-6 space-y-4">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
         <h2 className="text-xl sm:text-2xl font-bold">Manajemen User</h2>
         <button
@@ -90,17 +97,20 @@ const UsersPage = () => {
         </button>
       </div>
 
+      {/* Table */}
       <div className="overflow-x-auto bg-base-100 p-4 rounded-xl shadow">
         <UserTable
           users={users}
+          loading={isLoading}
           onEdit={(user) => {
             setSelectedUser(user);
             setIsAddMode(true);
           }}
-          onDelete={(id) => deleteMutation.mutate(id)}
+          onDelete={handleDelete}
         />
       </div>
 
+      {/* Modal Form */}
       <AnimatePresence>
         {(isAddMode || selectedUser) && (
           <motion.div
@@ -128,6 +138,7 @@ const UsersPage = () => {
         )}
       </AnimatePresence>
 
+      {/* Toast */}
       {toast && (
         <Toast
           message={toast.message}

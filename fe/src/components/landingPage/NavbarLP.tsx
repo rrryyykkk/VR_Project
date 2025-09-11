@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { RxHamburgerMenu, RxCross2 } from "react-icons/rx";
 import { motion, AnimatePresence } from "framer-motion";
+import { useUserProfile } from "../../app/store/UserStore";
+import { useAuthStore } from "../../app/store/AuthStore";
+import { useNavigate } from "react-router";
+import { FaUserCircle } from "react-icons/fa";
 
 const menu = [
   { name: "Home", link: "/" },
@@ -13,14 +17,23 @@ const menu = [
 const NavbarLP = () => {
   const [hamburgerMenu, setHamburgerMenu] = useState(false);
   const [isScroll, setIsScroll] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const { data: user, isLoading, isError } = useUserProfile();
+  console.log(user);
+  const { logoutUser } = useAuthStore();
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScroll(window.scrollY > 50);
-    };
+    const handleScroll = () => setIsScroll(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const logOutUser = () => {
+    logoutUser();
+    navigate("/", { replace: true });
+  };
 
   return (
     <>
@@ -40,33 +53,98 @@ const NavbarLP = () => {
         {/* Right Menu */}
         <div className="flex p-5 justify-end items-center space-x-4">
           {/* Desktop Menu */}
-          <div className="hidden lg:block">
-            <div
-              className={`flex space-x-8 items-center font-semibold transition-colors duration-300 ${
-                isScroll ? "text-black" : "text-fuchsia-600"
-              }`}
-            >
-              {menu.map((item, index) => (
-                <a
-                  key={index}
-                  href={item.link}
-                  className="hover:text-fuchsia-300 transition"
-                >
-                  {item.name}
-                </a>
-              ))}
-              {/* Beautiful Login Button */}
+          <div className="hidden lg:flex items-center space-x-6">
+            {menu.map((item, index) => (
+              <a
+                key={index}
+                href={item.link}
+                className={`font-medium transition-colors ${
+                  isScroll ? "text-gray-800" : "text-fuchsia-600"
+                } hover:text-fuchsia-400`}
+              >
+                {item.name}
+              </a>
+            ))}
+
+            {/* ✅ Profile Icon / Login */}
+            {isLoading ? null : !user || isError ? (
               <a
                 href="/login"
-                className="relative inline-block rounded-2xl px-4 py-2 font-bold text-white overflow-hidden group transition-all duration-300"
+                className="relative inline-block rounded-full px-4 py-2 font-bold text-white overflow-hidden group"
               >
-                <span className="absolute inset-0 bg-gradient-to-r from-fuchsia-600 to-pink-500 text-white transition-transform duration-500 group-hover:scale-110 group-hover:blur-sm"></span>
+                <span className="absolute inset-0 bg-gradient-to-r from-fuchsia-600 to-pink-500 rounded-full transition-transform duration-500 group-hover:scale-110 group-hover:blur-sm"></span>
                 <span className="relative z-10">Login</span>
               </a>
-            </div>
+            ) : (
+              <div className="relative">
+                <button
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="flex items-center"
+                >
+                  {user.imgProfile ? (
+                    <img
+                      src={user.imgProfile}
+                      alt="avatar"
+                      className="w-9 h-9 rounded-full border-2 border-fuchsia-500 object-cover shadow-md"
+                    />
+                  ) : (
+                    <FaUserCircle className="w-9 h-9 text-gray-700 hover:text-fuchsia-600 transition cursor-pointer" />
+                  )}
+                </button>
+
+                {/* Dropdown */}
+                <AnimatePresence>
+                  {dropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.9, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute right-0 mt-3 w-60 rounded-2xl shadow-xl border border-white/20 
+                                 bg-gradient-to-br from-white/70 to-white/30 backdrop-blur-xl overflow-hidden z-50"
+                    >
+                      <div className="px-4 py-3 border-b border-white/20">
+                        <div className="flex items-center space-x-3">
+                          {user.imgProfile ? (
+                            <img
+                              src={user.imgProfile}
+                              alt="avatar"
+                              className="w-12 h-12 rounded-full border border-fuchsia-400 object-cover "
+                            />
+                          ) : (
+                            <FaUserCircle className="w-12 h-12 text-fuchsia-600 cursor-pointer" />
+                          )}
+                          <div>
+                            <p className="font-semibold text-gray-900">
+                              {user.fullName}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {user.email}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <a
+                        href="/profile"
+                        className="block px-4 py-3 text-gray-800 font-medium hover:bg-fuchsia-100 transition"
+                      >
+                        Profile
+                      </a>
+                      <button
+                        onClick={logOutUser}
+                        className="w-full text-left px-4 py-3 text-gray-800 font-medium hover:bg-fuchsia-100 transition"
+                      >
+                        Logout
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
           </div>
 
-          {/* Hamburger Button */}
+          {/* Hamburger Button (Mobile) */}
           <div className="block lg:hidden">
             <button
               onClick={() => setHamburgerMenu(true)}
@@ -78,7 +156,7 @@ const NavbarLP = () => {
         </div>
       </div>
 
-      {/* Hamburger Overlay with Framer Motion */}
+      {/* Hamburger Drawer (Mobile) */}
       <AnimatePresence>
         {hamburgerMenu && (
           <>
@@ -91,7 +169,7 @@ const NavbarLP = () => {
               onClick={() => setHamburgerMenu(false)}
             />
 
-            {/* Slide Drawer */}
+            {/* Drawer */}
             <motion.div
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
@@ -99,11 +177,10 @@ const NavbarLP = () => {
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="fixed top-0 left-0 bottom-0 z-50 bg-white w-4/5 max-w-xs h-full px-8 py-6 flex flex-col justify-between shadow-2xl shadow-black/20 rounded-r-3xl"
             >
-              {/* Close Button */}
               <div className="flex justify-end">
                 <button
                   onClick={() => setHamburgerMenu(false)}
-                  className="text-3xl text-gray-700 hover:text-fuchsia-600 transition focus:outline-none focus:ring-2 focus:ring-fuchsia-400 rounded-full p-1 cursor-pointer"
+                  className="text-3xl text-gray-700 hover:text-fuchsia-600 p-1 rounded-full focus:outline-none"
                   aria-label="Close menu"
                 >
                   <RxCross2 />
@@ -122,17 +199,56 @@ const NavbarLP = () => {
                     {item.name}
                   </a>
                 ))}
-              </div>
 
-              {/* Beautiful Login Button */}
-              <a
-                href="/login"
-                onClick={() => setHamburgerMenu(false)}
-                className="relative inline-block rounded-full text-center px-6 py-3 font-semibold text-white overflow-hidden group transition-all duration-300 mt-6"
-              >
-                <span className="absolute inset-0 bg-gradient-to-r from-fuchsia-600 to-pink-500  transition-transform duration-500 group-hover:scale-110 group-hover:blur-sm rounded-full"></span>
-                <span className="relative z-10 text-white">Login</span>
-              </a>
+                {/* ✅ Mobile Profile / Login */}
+                {isLoading ? null : !user || isError ? (
+                  <a
+                    href="/login"
+                    onClick={() => setHamburgerMenu(false)}
+                    className="relative inline-block rounded-full text-center px-6 py-3 font-semibold text-white overflow-hidden group transition-all duration-300 mt-6"
+                  >
+                    <span className="absolute inset-0 bg-gradient-to-r from-fuchsia-600 to-pink-500 transition-transform duration-500 group-hover:scale-110 group-hover:blur-sm rounded-full"></span>
+                    <span className="relative z-10 text-white">Login</span>
+                  </a>
+                ) : (
+                  <div className="mt-6 space-y-3">
+                    <div className="bg-gradient-to-r from-fuchsia-500 to-pink-500 rounded-2xl p-4 text-white shadow-lg">
+                      <div className="flex items-center space-x-4">
+                        {user.imgProfile ? (
+                          <img
+                            src={user.imgProfile}
+                            alt="avatar"
+                            className="w-12 h-12 rounded-full border-2 border-white object-cover"
+                          />
+                        ) : (
+                          <FaUserCircle className="w-12 h-12 text-white" />
+                        )}
+                        <div>
+                          <p className="font-bold text-lg">{user.fullName}</p>
+                          <p className="text-sm opacity-80">{user.email}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <a
+                      href="/profile"
+                      onClick={() => setHamburgerMenu(false)}
+                      className="block px-4 py-2 rounded-lg text-gray-700 hover:bg-fuchsia-100"
+                    >
+                      Profile
+                    </a>
+                    <button
+                      onClick={() => {
+                        logOutUser();
+                        setHamburgerMenu(false);
+                      }}
+                      className="w-full text-left px-4 py-2 rounded-lg text-gray-700 hover:bg-fuchsia-100"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
             </motion.div>
           </>
         )}

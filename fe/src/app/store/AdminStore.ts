@@ -10,7 +10,9 @@ import type { Admin } from "./AuthStore";
 import { useToast } from "../../hooks/ToastContext"; // ✅ tambahkan ini
 
 // ✅ Query untuk fetch admin profile
-export const useAdminProfile = () => {
+export const useAdminProfile = (
+  options?: Omit<UseQueryOptions<Admin, Error>, "queryKey" | "queryFn">
+) => {
   const setAdmin = useAuthStore((state) => state.setAdmin);
 
   return useQuery<Admin, Error>({
@@ -25,6 +27,7 @@ export const useAdminProfile = () => {
     onError: (err: Error) => {
       console.error("Fetch admin failed:", err.message);
     },
+    ...options,
   } as UseQueryOptions<Admin, Error>);
 };
 

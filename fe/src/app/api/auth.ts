@@ -27,3 +27,8 @@ export const userLogout = async () => {
   const res = await api.post("/auth/user/logout");
   return res;
 };
+
+export const authCheck = async () => {
+  const res = await api.get("/auth/admin/authCheck");
+  return res;
+};

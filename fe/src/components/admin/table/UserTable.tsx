@@ -1,12 +1,11 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
 import type { User } from "../../../type/user";
-import { FiEye, FiEyeOff } from "react-icons/fi";
 
 interface Props {
   users: User[];
+  loading?: boolean;
   onEdit: (user: User) => void;
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void; // ganti number -> string
 }
 
 const rowVariants = {
@@ -14,19 +13,14 @@ const rowVariants = {
   visible: { opacity: 1, y: 0 },
 };
 
-export default function UserTable({ users, onEdit, onDelete }: Props) {
-  const [visiblePasswords, setVisiblePasswords] = useState<Set<number>>(
-    new Set()
-  );
-
-  const togglePasswordVisibility = (id: number) => {
-    setVisiblePasswords((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) newSet.delete(id);
-      else newSet.add(id);
-      return newSet;
-    });
-  };
+export default function UserTable({ users, loading, onEdit, onDelete }: Props) {
+  if (loading) {
+    return (
+      <div className="w-full p-4 text-center text-gray-500">
+        Loading users...
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -37,14 +31,12 @@ export default function UserTable({ users, onEdit, onDelete }: Props) {
       }}
       className="overflow-x-auto w-full"
     >
-      {/* Container dengan min-w supaya tabel tidak mengecil */}
       <div className="min-w-[800px]">
         <table className="table table-zebra w-full text-sm rounded-xl shadow border border-base-300">
           <thead className="bg-base-200 text-base-content text-xs md:text-sm">
             <tr>
               <th className="whitespace-nowrap">Nama</th>
               <th className="whitespace-nowrap">Email</th>
-              <th className="whitespace-nowrap">Password</th>
               <th className="whitespace-nowrap">Umur</th>
               <th className="whitespace-nowrap">Gender</th>
               <th className="whitespace-nowrap">Riwayat Pendidikan</th>
@@ -54,39 +46,18 @@ export default function UserTable({ users, onEdit, onDelete }: Props) {
           </thead>
           <tbody>
             {users.map((user) => {
-              const isVisible = visiblePasswords.has(user.id!);
               return (
                 <motion.tr
                   key={user.id}
                   variants={rowVariants}
                   className="hover"
                 >
-                  <td className="whitespace-nowrap">{user.name}</td>
+                  <td className="whitespace-nowrap">{user.fullName}</td>
                   <td className="whitespace-nowrap">{user.email}</td>
-                  <td className="whitespace-nowrap flex items-center gap-2">
-                    <span>
-                      {isVisible
-                        ? user.password
-                        : "*".repeat(user.password.length)}
-                    </span>
-                    <button
-                      onClick={() => togglePasswordVisibility(user.id!)}
-                      className="btn btn-xs btn-ghost p-0"
-                      aria-label={
-                        isVisible
-                          ? "Sembunyikan password"
-                          : "Tampilkan password"
-                      }
-                      type="button"
-                    >
-                      {isVisible ? <FiEyeOff size={16} /> : <FiEye size={16} />}
-                    </button>
-                  </td>
+
                   <td className="whitespace-nowrap">{user.age}</td>
                   <td className="whitespace-nowrap">{user.gender}</td>
-                  <td className="whitespace-nowrap">
-                    {user.riwayatPendidikan}
-                  </td>
+                  <td className="whitespace-nowrap">{user.educationHistory}</td>
                   <td className="whitespace-nowrap">{user.medicalNote}</td>
                   <td className="whitespace-nowrap">
                     <div className="flex flex-wrap justify-end gap-2 py-1">
@@ -98,7 +69,7 @@ export default function UserTable({ users, onEdit, onDelete }: Props) {
                       </button>
                       <button
                         className="btn btn-xs btn-error"
-                        onClick={() => onDelete(user.id!)}
+                        onClick={() => onDelete(user.id)}
                       >
                         Hapus
                       </button>

@@ -1,17 +1,31 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { useToast } from "../../hooks/ToastContext";
+import { useAuthStore } from "../../app/store/AuthStore";
+import { FiEye, FiEyeOff } from "react-icons/fi"; // 👈 import icon
 
 const LoginUsers = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { addToast } = useToast();
+  const { loginUser, loading, error } = useAuthStore();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Tambahkan autentikasi di sini
-    console.log("Email:", email);
-    console.log("Password:", password);
+    const success = await loginUser({ email, password });
+
+    if (success) {
+      addToast("Login berhasil!", "success");
+      navigate("/", { replace: true }); // redirect ke users
+    } else {
+      // ambil error dari store
+      const errorMessage = useAuthStore.getState().error || "Login gagal!";
+      addToast(errorMessage, "error");
+    }
   };
 
   return (
@@ -56,27 +70,37 @@ const LoginUsers = () => {
             />
           </div>
 
-          <div>
+          <div className="relative">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Password
             </label>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-fuchsia-300"
               placeholder="********"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-9 text-gray-500 hover:text-blue-600 cursor-pointer"
+            >
+              {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+            </button>
           </div>
 
           <button
             type="submit"
+            disabled={loading}
             className="w-full bg-gradient-to-r from-fuchsia-600 to-pink-500 text-white font-semibold py-2 rounded-xl hover:brightness-110 transition cursor-pointer"
           >
-            Login
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
+
+        {error && <p className="text-red-500 mt-4">{error}</p>}
 
         <div className="text-center mt-6">
           <button

@@ -1,5 +1,5 @@
-import type { User } from "../../type/user";
 import { create } from "zustand";
+import type { User } from "../../type/user";
 import { adminLogin, adminLogout, userLogin, userLogout } from "../api/auth";
 
 export type Admin = {
@@ -12,7 +12,7 @@ export type Admin = {
   createdAt: Date;
 };
 
-type loginCredentials = { email: string; password: string };
+type LoginCredentials = { email: string; password: string };
 
 type AuthState = {
   user: User | null;
@@ -21,16 +21,18 @@ type AuthState = {
   loading: boolean;
   error: string | null;
 
-  // Actions
   setAdmin: (admin: Admin) => void;
   setUser: (user: User) => void;
   clearAuth: () => void;
 
-  loginAdmin: (credentials: loginCredentials) => Promise<boolean>;
+  loginAdmin: (credentials: LoginCredentials) => Promise<boolean>;
   logoutAdmin: () => Promise<void>;
-  loginUser: (credentials: loginCredentials) => Promise<boolean>;
+  loginUser: (credentials: LoginCredentials) => Promise<boolean>;
   logoutUser: () => Promise<void>;
 };
+
+const getErrorMessage = (err: unknown, fallback: string) =>
+  err instanceof Error ? err.message : fallback;
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
@@ -41,7 +43,8 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   setAdmin: (admin: Admin) => set({ admin, role: "admin" }),
   setUser: (user: User) => set({ user, role: "user" }),
-  clearAuth: () => set({ user: null, admin: null, role: null, error: null }),
+  clearAuth: () =>
+    set({ user: null, admin: null, role: null, error: null, loading: false }),
 
   loginAdmin: async (credentials) => {
     set({ loading: true, error: null });
@@ -49,22 +52,20 @@ export const useAuthStore = create<AuthState>((set) => ({
       const res = await adminLogin(credentials);
       if (!res.data) throw new Error("Email atau password salah");
       set({ admin: res.data, role: "admin", loading: false });
-      return true; // sukses
-    } catch (error: unknown) {
-      set({
-        error: error instanceof Error ? error.message : "Admin login gagal",
-        loading: false,
-      });
-      return false; // gagal
+      return true;
+    } catch (err: unknown) {
+      set({ error: getErrorMessage(err, "Admin login gagal"), loading: false });
+      return false;
     }
   },
 
   logoutAdmin: async () => {
     try {
       await adminLogout();
-      set({ admin: null, role: null });
     } catch {
       set({ error: "Admin logout gagal" });
+    } finally {
+      set({ admin: null, role: null });
     }
   },
 
@@ -75,11 +76,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       if (!res.data) throw new Error("Email atau password salah");
       set({ user: res.data, role: "user", loading: false });
       return true;
-    } catch (error: unknown) {
-      set({
-        error: error instanceof Error ? error.message : "User login gagal",
-        loading: false,
-      });
+    } catch (err: unknown) {
+      set({ error: getErrorMessage(err, "User login gagal"), loading: false });
       return false;
     }
   },
@@ -87,9 +85,10 @@ export const useAuthStore = create<AuthState>((set) => ({
   logoutUser: async () => {
     try {
       await userLogout();
-      set({ user: null, role: null });
     } catch {
       set({ error: "User logout gagal" });
+    } finally {
+      set({ user: null, role: null });
     }
   },
 }));

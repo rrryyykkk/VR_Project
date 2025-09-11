@@ -20,11 +20,9 @@ export const registerAdmin = async (req, res) => {
   try {
     // Validasi input
     if (!email || !password || !fullName || !userName)
-      return res
-        .status(400)
-        .json({
-          message: "Email, password,userName and fullName are required",
-        });
+      return res.status(400).json({
+        message: "Email, password,userName and fullName are required",
+      });
 
     if (!validator.isEmail(email))
       return res.status(400).json({ message: "Invalid email format" });

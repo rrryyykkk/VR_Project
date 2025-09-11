@@ -14,6 +14,9 @@ import VRRecorder, {
   type VRRecorderHandle,
 } from "../../components/landingPage/VR/VRRecorder";
 
+import { xrStore } from "../../hooks/xrStore";
+import { XR } from "@react-three/xr";
+
 export default function VRView() {
   const { locationId } = useParams();
   const { state } = useLocation();
@@ -98,33 +101,38 @@ export default function VRView() {
 
       <Canvas camera={{ position: [0, 0, 0.1], fov: 75 }}>
         <Suspense fallback={null}>
-          {/* Panorama */}
-          <Scene image={currentScene.image} />
+          <XR store={xrStore}>
+            {/* Panorama */}
+            <Scene image={currentScene.image} />
 
-          {/* Hotspot muncul setelah scene selesai load */}
-          {isLoaded &&
-            currentScene.hotspots?.map((hs: HotspotData, idx: number) => (
-              <Hotspot
-                key={`${currentScene.id}-${idx}`} // key unik per scene
-                data={hs}
-                onClick={() => {
-                  if (hs.targetId) {
-                    const targetIndex = views.findIndex(
-                      (v) => v.id === hs.targetId
-                    );
-                    if (targetIndex !== -1) setCurrentSceneIndex(targetIndex);
-                    recorderRef.current?.logInteraction("hotspot", hs.targetId);
-                  }
-                }}
-              />
-            ))}
+            {/* Hotspot muncul setelah scene selesai load */}
+            {isLoaded &&
+              currentScene.hotspots?.map((hs: HotspotData, idx: number) => (
+                <Hotspot
+                  key={`${currentScene.id}-${idx}`} // key unik per scene
+                  data={hs}
+                  onClick={() => {
+                    if (hs.targetId) {
+                      const targetIndex = views.findIndex(
+                        (v) => v.id === hs.targetId
+                      );
+                      if (targetIndex !== -1) setCurrentSceneIndex(targetIndex);
+                      recorderRef.current?.logInteraction(
+                        "hotspot",
+                        hs.targetId
+                      );
+                    }
+                  }}
+                />
+              ))}
 
-          <OrbitControls
-            ref={controlsRef}
-            enableZoom={false}
-            autoRotate={autoRotate}
-            autoRotateSpeed={0.3}
-          />
+            <OrbitControls
+              ref={controlsRef}
+              enableZoom={false}
+              autoRotate={autoRotate}
+              autoRotateSpeed={0.3}
+            />
+          </XR>
         </Suspense>
       </Canvas>
 

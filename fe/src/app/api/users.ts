@@ -7,7 +7,7 @@ export const getMeUser = async () => {
 };
 
 export const editProfileUser = async (data: FormData) => {
-  const res = await api.put("/user/updateUser", data);
+  const res = await api.put("/user/update", data);
   return res;
 };
 

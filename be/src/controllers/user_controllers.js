@@ -208,124 +208,93 @@ export const deleteUserAdmin = async (req, res) => {
 // ----------------- UPDATE USER SENDIRI -----------------
 export const updateUser = async (req, res) => {
   try {
-    const userId = req.user.id;
-    let {
-      email,
-      fullName,
-      userName,
-      age,
-      gender,
-      educationHistory,
-      medicalNote,
-      oldPassword,
-      newPassword,
-    } = req.body;
+    const { fullName, userName, email, oldPassword, newPassword, imgProfile } =
+      req.body;
+    console.log(req.body);
 
-    // 1. Validasi dasar
-    if (email && !validator.isEmail(email)) {
-      return res.status(400).json({ message: "Invalid email format" });
-    }
+    // ambil data dari JWT
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+    });
 
-    if (newPassword && newPassword.length < 8) {
-      return res
-        .status(400)
-        .json({ message: "Password must be at least 8 characters" });
-    }
-
-    if (age && !validator.isInt(age.toString(), { min: 1, max: 120 })) {
-      return res.status(400).json({ message: "Invalid age value" });
-    }
-
-    // 2. Cari user
-    const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    // 3. Persiapkan data update
-    let updatedData = {};
+    let updateData = {};
 
-    if (email && email !== user.email) {
-      const emailExists = await prisma.user.findUnique({ where: { email } });
-      if (emailExists) {
-        return res.status(409).json({ message: "Email already exists" });
-      }
-      updatedData.email = validator.normalizeEmail(email);
-    }
+    // update fullName
+    if (fullName) updateData.fullName = fullName;
 
-    if (userName && userName !== user.userName) {
-      const userNameExists = await prisma.user.findUnique({
-        where: { userName },
-      });
-      if (userNameExists) {
-        return res.status(409).json({ message: "Username already exists" });
-      }
-      updatedData.userName = validator.escape(userName);
-    }
-
-    if (fullName) updatedData.fullName = validator.escape(fullName);
-    if (educationHistory)
-      updatedData.educationHistory = validator.escape(educationHistory);
-    if (medicalNote) updatedData.medicalNote = validator.escape(medicalNote);
-
-    if (age) updatedData.age = parseInt(age, 10);
-    if (gender) {
-      if (!["lakiLaki", "perempuan"].includes(gender)) {
-        return res.status(400).json({ message: "Invalid gender" });
-      }
-      updatedData.gender = gender;
-    }
-
-    // 4. Ubah password kalau diminta
-    if (newPassword) {
-      if (!oldPassword) {
-        return res
-          .status(400)
-          .json({ message: "Old password is required to change password" });
-      }
-
-      const isMatch = await comparePW(oldPassword, user.password);
-      if (!isMatch) {
-        return res.status(400).json({ message: "Old password is incorrect" });
-      }
-
-      const hashedNewPassword = await hashPW(newPassword, 12); // pakai cost 12
-      updatedData.password = hashedNewPassword;
-    }
-
-    // 5. Upload image
+    // update imgProfile
     if (req.file) {
       try {
-        const imageUrl = await uploadToCloudinary(req.file.buffer);
-        updatedData.imgProfile = imageUrl;
+        const imgUrl = await uploadToCloudinary(req.file.buffer, "imgProfile");
+        updateData.imgProfile = imgUrl;
       } catch (err) {
         console.error("Cloudinary error:", err);
         return res.status(400).json({ message: "Failed to upload image" });
       }
+    } else if (imgProfile && imgProfile.startsWith("http")) {
+      updateData.imgProfile = imgProfile;
     }
 
-    // 6. Update DB
+    // update userName harus cek apakah sudah dipakai
+    if (userName) {
+      const userNameExists = await prisma.user.findUnique({
+        where: { userName },
+      });
+      if (userNameExists)
+        return res.status(409).json({ message: "Username already exists" });
+      updateData.userName = userName;
+    }
+
+    // update email butuh oldPassword
+    if (email) {
+      if (!oldPassword)
+        return res.status(400).json({ message: "Old password is required" });
+
+      const valid = await comparePW(oldPassword, user.password);
+      if (!valid)
+        return res.status(401).json({ message: "Invalid old password" });
+
+      updateData.email = email;
+    }
+
+    // update password butuh oldPassword
+    if (newPassword) {
+      if (!oldPassword)
+        return res.status(400).json({ message: "Old password is required" });
+
+      const valid = await comparePW(oldPassword, user.password);
+      if (!valid)
+        return res.status(401).json({ message: "Invalid old password" });
+
+      updateData.password = await hashPW(newPassword);
+    }
+
+    // simpan data
     const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: updatedData,
+      where: { id: req.user.id },
+      data: updateData,
       select: {
         id: true,
         email: true,
         userName: true,
         fullName: true,
-        age: true,
-        gender: true,
-        educationHistory: true,
-        medicalNote: true,
         imgProfile: true,
+        createdAt: true,
         updatedAt: true,
       },
     });
+    console.log("updatedUser", updatedUser);
 
-    res.status(200).json({
-      message: "User updated successfully",
-      user: updatedUser,
-    });
+    return res
+      .status(200)
+      .json({ updatedUser, message: "Profile updated successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Internal server error" });
+    console.error("updateUser error:", error.message);
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
 };
 

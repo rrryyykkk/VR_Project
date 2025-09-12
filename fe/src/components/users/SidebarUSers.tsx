@@ -1,4 +1,4 @@
-import { FaUser, FaHistory, FaSignOutAlt } from "react-icons/fa";
+import { FaUser, FaHistory, FaSignOutAlt, FaHome } from "react-icons/fa";
 
 interface SidebarUsersProps {
   isOpen: boolean;
@@ -7,6 +7,7 @@ interface SidebarUsersProps {
 
 const SidebarUsers = ({ isOpen, setIsOpen }: SidebarUsersProps) => {
   const menuItems = [
+    { name: "Home", icon: FaHome, href: "/" },
     { name: "Profil", icon: FaUser, href: "/profile" },
     { name: "Riwayat", icon: FaHistory, href: "/users/history" },
   ];

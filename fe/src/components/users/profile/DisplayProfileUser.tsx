@@ -1,10 +1,10 @@
 import { motion } from "framer-motion";
 
 interface Profile {
-  username: string;
+  userName: string;
   fullName: string;
   email: string;
-  profileImage: string;
+  imgProfile: string;
 }
 
 interface Props {
@@ -20,7 +20,7 @@ export default function ProfileDisplayUser({ profile }: Props) {
       className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg p-6 flex flex-col items-center"
     >
       <motion.img
-        src={profile.profileImage}
+        src={profile.imgProfile}
         alt="Profile"
         className="w-28 h-28 rounded-full object-cover border-4 border-pink-300 shadow-md"
         initial={{ scale: 0 }}
@@ -30,7 +30,7 @@ export default function ProfileDisplayUser({ profile }: Props) {
 
       <div className="mt-4 text-center space-y-1">
         <h2 className="text-2xl font-bold text-pink-500">{profile.fullName}</h2>
-        <p className="text-sm text-gray-500">@{profile.username}</p>
+        <p className="text-sm text-gray-500">@{profile.userName}</p>
         <p className="text-gray-600">{profile.email}</p>
       </div>
     </motion.div>

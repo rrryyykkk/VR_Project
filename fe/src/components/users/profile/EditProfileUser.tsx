@@ -1,30 +1,36 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { FaUser, FaEnvelope, FaLock, FaImage, FaIdCard } from "react-icons/fa";
+import {
+  FaUser,
+  FaEnvelope,
+  FaLock,
+  FaImage,
+  FaIdCard,
+  FaLink,
+} from "react-icons/fa";
+import { useToast } from "../../../hooks/ToastContext";
 
 interface Profile {
-  username: string;
-  fullName: string;
-  email: string;
-  profileImage: string;
-  password: string;
+  userName?: string;
+  fullName?: string;
+  email?: string;
+  imgProfile?: string;
+  password?: string;
 }
 
 interface Props {
   profile: Profile;
-  onSave: (updated: Profile) => void;
+  onSave: (formData: FormData) => void;
+  isLoading?: boolean;
 }
 
-/**
- * Input dengan icon di kiri
- */
 const IconInput = ({
   label,
   icon: Icon,
   ...props
 }: {
   label: string;
-  icon: React.ComponentType<{ className?: string }>; // ✅ fix typing
+  icon: React.ComponentType<{ className?: string }>;
 } & React.InputHTMLAttributes<HTMLInputElement>) => (
   <div className="space-y-1">
     <label className="block text-gray-700 font-medium text-sm">{label}</label>
@@ -40,8 +46,13 @@ const IconInput = ({
   </div>
 );
 
-export default function EditFormProfileUser({ profile, onSave }: Props) {
-  const [form, setForm] = useState<Profile>(profile);
+export default function EditFormProfileUser({
+  profile,
+  onSave,
+  isLoading,
+}: Props) {
+  const { addToast } = useToast();
+  const [form, setForm] = useState<Profile>({ ...profile, password: "" });
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
@@ -54,21 +65,45 @@ export default function EditFormProfileUser({ profile, onSave }: Props) {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () =>
-        setForm({ ...form, profileImage: reader.result as string });
+        setForm({ ...form, imgProfile: reader.result as string });
       reader.readAsDataURL(file);
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.username || !form.fullName || !form.email) {
-      return alert("Harap isi semua data profil!");
+
+    if (form.password && form.password !== confirmPassword) {
+      addToast("Password tidak cocok!", "error");
+      return;
     }
-    if (form.password !== confirmPassword) {
-      return alert("Password tidak cocok!");
+
+    const formData = new FormData();
+    if (form.userName) formData.append("userName", form.userName);
+    if (form.fullName) formData.append("fullName", form.fullName);
+    if (form.email) formData.append("email", form.email);
+    if (form.password) formData.append("newPassword", form.password);
+
+    // imgProfile bisa file atau link
+    if (form.imgProfile) {
+      if (form.imgProfile.startsWith("data:")) {
+        fetch(form.imgProfile)
+          .then((res) => res.blob())
+          .then((blob) => {
+            formData.append("imgProfile", blob, "profile.png");
+            onSave(formData);
+            addToast("Profil berhasil diperbarui!", "success");
+          })
+          .catch(() => addToast("Gagal upload gambar!", "error"));
+      } else {
+        formData.append("imgProfile", form.imgProfile); // link langsung
+        onSave(formData);
+        addToast("Profil berhasil diperbarui!", "success");
+      }
+    } else {
+      onSave(formData);
+      addToast("Profil berhasil diperbarui!", "success");
     }
-    onSave(form);
-    alert("Profil berhasil diperbarui!");
   };
 
   return (
@@ -82,13 +117,13 @@ export default function EditFormProfileUser({ profile, onSave }: Props) {
       <h3 className="text-xl font-bold text-gray-800">Edit Profil</h3>
 
       <IconInput
-        label="Username"
+        label="UserName"
         icon={FaUser}
         type="text"
-        name="username"
-        value={form.username}
+        name="userName"
+        value={form.userName || ""}
         onChange={handleChange}
-        placeholder="Masukkan username"
+        placeholder="Masukkan userName"
       />
 
       <IconInput
@@ -96,7 +131,7 @@ export default function EditFormProfileUser({ profile, onSave }: Props) {
         icon={FaIdCard}
         type="text"
         name="fullName"
-        value={form.fullName}
+        value={form.fullName || ""}
         onChange={handleChange}
         placeholder="Masukkan nama lengkap"
       />
@@ -106,21 +141,21 @@ export default function EditFormProfileUser({ profile, onSave }: Props) {
         icon={FaEnvelope}
         type="email"
         name="email"
-        value={form.email}
+        value={form.email || ""}
         onChange={handleChange}
         placeholder="Masukkan email"
       />
 
-      {/* Upload Foto + Preview */}
-      <div>
-        <label className="block mb-2 text-gray-700 font-medium text-sm">
+      {/* Upload Foto + Link */}
+      <div className="space-y-2">
+        <label className="block text-gray-700 font-medium text-sm">
           Foto Profil
         </label>
-        {form.profileImage && (
+        {form.imgProfile && (
           <img
-            src={form.profileImage}
+            src={form.imgProfile}
             alt="Preview"
-            className="w-20 h-20 rounded-full object-cover mb-3 border border-gray-200"
+            className="w-20 h-20 rounded-full object-cover border border-gray-200"
           />
         )}
         <div className="flex items-center gap-3">
@@ -130,6 +165,16 @@ export default function EditFormProfileUser({ profile, onSave }: Props) {
             accept="image/*"
             onChange={handleImageChange}
             className="file-input file-input-bordered w-full"
+          />
+        </div>
+        <div className="flex items-center gap-3">
+          <FaLink className="text-gray-400" />
+          <input
+            type="text"
+            placeholder="Masukkan link gambar (opsional)"
+            value={form.imgProfile?.startsWith("http") ? form.imgProfile : ""}
+            onChange={(e) => setForm({ ...form, imgProfile: e.target.value })}
+            className="input input-bordered w-full"
           />
         </div>
       </div>
@@ -168,9 +213,10 @@ export default function EditFormProfileUser({ profile, onSave }: Props) {
 
       <button
         type="submit"
-        className="btn btn-primary w-full bg-pink-500 hover:bg-pink-600 border-none"
+        disabled={isLoading}
+        className="btn btn-primary w-full bg-pink-500 hover:bg-pink-600 border-none disabled:opacity-50"
       >
-        Simpan Perubahan
+        {isLoading ? "Menyimpan..." : "Simpan Perubahan"}
       </button>
     </motion.form>
   );

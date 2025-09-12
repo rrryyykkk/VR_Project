@@ -20,10 +20,8 @@ import VRViewParent from "./page/landingPage/VRViewParent";
 import VRView from "./page/landingPage/VRView";
 import Insight from "./page/landingPage/Insight";
 import ProtectedRoute from "./middleware/ProtectedRoutes";
-import { useHydrateAuth } from "./hooks/useHydrateAuth";
 
 const App = () => {
-  useHydrateAuth();
   return (
     <Routes>
       {/* landing page */}
@@ -123,24 +121,23 @@ const App = () => {
         />
       </Route>
       {/* users */}
-      <Route element={<ProtectedRoute role="user" />}>
-        <Route
-          path="/profile"
-          element={
-            <UsersLayout>
-              <ProfilePageUser />
-            </UsersLayout>
-          }
-        />
-        <Route
-          path="/users/history"
-          element={
-            <UsersLayout>
-              <HistoryPageUsers />
-            </UsersLayout>
-          }
-        />
-      </Route>
+      <Route element={<ProtectedRoute role="user" />}></Route>
+      <Route
+        path="/profile"
+        element={
+          <UsersLayout>
+            <ProfilePageUser />
+          </UsersLayout>
+        }
+      />
+      <Route
+        path="/users/history"
+        element={
+          <UsersLayout>
+            <HistoryPageUsers />
+          </UsersLayout>
+        }
+      />
     </Routes>
   );
 };

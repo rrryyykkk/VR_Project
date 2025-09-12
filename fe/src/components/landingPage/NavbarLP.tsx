@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { RxHamburgerMenu, RxCross2 } from "react-icons/rx";
 import { motion, AnimatePresence } from "framer-motion";
-import { useUserProfile } from "../../app/store/UserStore";
 import { useAuthStore } from "../../app/store/AuthStore";
 import { useNavigate } from "react-router";
 import { FaUserCircle } from "react-icons/fa";
+import { useUserProfile } from "../../app/store/UserStore";
 
 const menu = [
   { name: "Home", link: "/" },
@@ -21,7 +21,6 @@ const NavbarLP = () => {
   const navigate = useNavigate();
 
   const { data: user, isLoading, isError } = useUserProfile();
-  console.log(user);
   const { logoutUser } = useAuthStore();
 
   useEffect(() => {
@@ -37,6 +36,7 @@ const NavbarLP = () => {
 
   return (
     <>
+      {/* Navbar */}
       <div
         className={`fixed top-0 z-50 w-full grid grid-cols-2 transition-all duration-300 rounded-b-xl ${
           isScroll
@@ -66,8 +66,8 @@ const NavbarLP = () => {
               </a>
             ))}
 
-            {/* ✅ Profile Icon / Login */}
-            {isLoading ? null : !user || isError ? (
+            {/* ✅ Profile / Login */}
+            {isLoading ? null : isError || !user ? (
               <a
                 href="/login"
                 className="relative inline-block rounded-full px-4 py-2 font-bold text-white overflow-hidden group"
@@ -109,7 +109,7 @@ const NavbarLP = () => {
                             <img
                               src={user.imgProfile}
                               alt="avatar"
-                              className="w-12 h-12 rounded-full border border-fuchsia-400 object-cover "
+                              className="w-12 h-12 rounded-full border border-fuchsia-400 object-cover"
                             />
                           ) : (
                             <FaUserCircle className="w-12 h-12 text-fuchsia-600 cursor-pointer" />
@@ -201,7 +201,7 @@ const NavbarLP = () => {
                 ))}
 
                 {/* ✅ Mobile Profile / Login */}
-                {isLoading ? null : !user || isError ? (
+                {isLoading ? null : isError || !user ? (
                   <a
                     href="/login"
                     onClick={() => setHamburgerMenu(false)}

@@ -5,6 +5,21 @@ interface HistoryTableUserProps {
   onSelect: (session: VRSession) => void;
 }
 
+// 🔹 Helper untuk format durasi
+function formatDuration(seconds: number): string {
+  if (!seconds || seconds < 0) return "-";
+
+  if (seconds < 60) {
+    return `${seconds} detik`;
+  } else if (seconds < 3600) {
+    return `${Math.floor(seconds / 60)} menit ${seconds % 60} detik`;
+  } else {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${hours} jam ${minutes} menit`;
+  }
+}
+
 export default function HistoryTableUser({
   data,
   onSelect,
@@ -15,7 +30,7 @@ export default function HistoryTableUser({
       <table className="table w-full">
         <thead>
           <tr>
-            <th>Nama</th>
+            <th>Session ID</th>
             <th>Waktu Mulai</th>
             <th>Durasi</th>
             <th>Device</th>
@@ -26,9 +41,9 @@ export default function HistoryTableUser({
         <tbody>
           {data.map((session) => (
             <tr key={session.sessionId}>
-              <td>{session.name || session.userId}</td>
+              <td>{session.userId}</td>
               <td>{new Date(session.startTime).toLocaleString()}</td>
-              <td>{Math.floor(session.duration / 60)} mnt</td>
+              <td>{formatDuration(session.duration)}</td>
               <td>{session.device || "-"}</td>
               <td>
                 {session.hotspots?.join(", ") ||

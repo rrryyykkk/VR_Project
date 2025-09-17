@@ -4,10 +4,11 @@ import {
   useQueryClient,
   type UseQueryOptions,
 } from "@tanstack/react-query";
-import { editProfileAdmin, getMeAdmin } from "../api/admin";
+import { editProfileAdmin, getDashboard, getMeAdmin } from "../api/admin";
 import { useAuthStore } from "./AuthStore";
 import type { Admin } from "./AuthStore";
 import { useToast } from "../../hooks/ToastContext"; // ✅ tambahkan ini
+import type { DashboardData } from "../../page/admin/Dashboard";
 
 // ✅ Query untuk fetch admin profile
 export const useAdminProfile = (
@@ -29,6 +30,13 @@ export const useAdminProfile = (
     },
     ...options,
   } as UseQueryOptions<Admin, Error>);
+};
+
+export const useGetDashboard = () => {
+  return useQuery<DashboardData, Error>({
+    queryKey: ["dashboard"],
+    queryFn: getDashboard,
+  });
 };
 
 // ✅ Mutation untuk edit profile admin

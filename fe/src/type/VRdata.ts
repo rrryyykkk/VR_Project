@@ -1,3 +1,5 @@
+import type { User } from "./user";
+
 // types/VRSession.ts
 export interface RoomVisit {
   roomId: string;
@@ -7,8 +9,9 @@ export interface RoomVisit {
 }
 
 export interface CameraRotation {
-  timestamp: string;
-  rotation: { x: number; y: number };
+  timeStamp: string;
+  rotX: number;
+  rotY: number;
 }
 
 export interface Task {
@@ -35,6 +38,7 @@ export interface VRSession {
   device?: string;
   previousSessionId?: string;
   hotspots?: string[];
+  user?: User;
   roomHistory?: RoomVisit[];
   cameraRotations?: CameraRotation[];
   tasks?: Task[];

@@ -5,10 +5,12 @@ import {
   useState,
   forwardRef,
   useImperativeHandle,
-  useCallback,
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { CameraRotation, VRSession } from "../../../type/VRdata";
+import { useCreateVrSession } from "../../../app/store/VrSessionStore";
+import type { User } from "../../../type/user";
+import { useToast } from "../../../hooks/ToastContext";
 
 interface VRRecorderProps {
   currentSceneId: string;
@@ -16,7 +18,8 @@ interface VRRecorderProps {
   rotation: { x: number; y: number };
   startSceneIds: string[];
   exitSceneIds: string[];
-  onAllowEnterScene?: () => void; // callback ke parent
+  onAllowEnterScene?: () => void;
+  user?: User | null;
 }
 
 export type VRRecorderHandle = {
@@ -34,6 +37,7 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
       startSceneIds,
       exitSceneIds,
       onAllowEnterScene,
+      user,
     },
     ref
   ) => {
@@ -44,13 +48,21 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
     const lastSceneRef = useRef<{ id: string; name: string } | null>(null);
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const dismissedStartScenes = useRef<Set<string>>(new Set());
+    const { addToast } = useToast();
+    const rotationRef = useRef(rotation); // stable ref to latest rotation
 
     const [showModal, setShowModal] = useState<{
       type: "start" | "stop";
       open: boolean;
     }>({ type: "start", open: false });
 
-    // Clear session saat refresh/close tab
+    const createSessionMutation = useCreateVrSession();
+
+    // keep rotationRef up to date — does not re-create callbacks
+    useEffect(() => {
+      rotationRef.current = rotation;
+    }, [rotation]);
+
     useEffect(() => {
       const handleUnload = () => {
         sessionStorage.removeItem(STORAGE_KEY);
@@ -60,24 +72,19 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
       return () => window.removeEventListener("beforeunload", handleUnload);
     }, []);
 
-    // Modal start/stop
     useEffect(() => {
       if (!currentSceneId) return;
 
-      // ✅ kalau user masuk exitSceneIds
       if (exitSceneIds.includes(currentSceneId)) {
         if (recording) {
-          // kalau sedang recording → tanya stop
           setShowModal({ type: "stop", open: true });
         } else {
-          // kalau tidak recording → langsung lewat (tanpa modal stop)
-          dismissedStartScenes.current.clear(); // reset supaya nanti masuk lagi tetap ditanya
+          dismissedStartScenes.current.clear();
           onAllowEnterScene?.();
         }
         return;
       }
 
-      // ✅ kalau user masuk startSceneIds
       if (
         startSceneIds.includes(currentSceneId) &&
         !recording &&
@@ -85,14 +92,23 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
       ) {
         setShowModal({ type: "start", open: true });
       }
-    }, [currentSceneId, recording, startSceneIds, exitSceneIds, onAllowEnterScene]);
+    }, [
+      currentSceneId,
+      recording,
+      startSceneIds,
+      exitSceneIds,
+      onAllowEnterScene,
+    ]);
 
-    // Simpan rotasi tiap detik
-    const recordRotation = useCallback(() => {
+    // stable recorder function: reads rotation from rotationRef
+    const recordRotationOnce = () => {
       if (!sessionRef.current) return;
+      const nowIso = new Date().toISOString();
+      const r = rotationRef.current ?? { x: 0, y: 0 };
       const newRotation: CameraRotation = {
-        timestamp: new Date().toISOString(),
-        rotation,
+        timeStamp: nowIso,
+        rotX: r.x,
+        rotY: r.y,
       };
       const updated: VRSession = {
         ...sessionRef.current,
@@ -103,27 +119,43 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
         duration: Math.max(
           0,
           Math.floor(
-            (Date.now() - new Date(sessionRef.current.startTime).getTime()) / 1000
+            (Date.now() - new Date(sessionRef.current.startTime).getTime()) /
+              1000
           )
         ),
       };
       sessionRef.current = updated;
       setSession(updated);
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    }, [rotation]);
+    };
 
-    // Interval record rotasi
+    // start/stop per-second interval (stable; doesn't depend on rotation)
     useEffect(() => {
-      if (!recording) return;
-      intervalRef.current = setInterval(recordRotation, 1000);
+      if (!recording) {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+        return;
+      }
+      // create exactly one interval
+      intervalRef.current = setInterval(recordRotationOnce, 1000);
+      // also record immediately at start (so first sample is immediate)
+      recordRotationOnce();
       return () => {
-        if (intervalRef.current) clearInterval(intervalRef.current);
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
       };
-    }, [recording, recordRotation]);
+      // note: do NOT include recordRotationOnce or rotationRef in deps
+      // we purposely want a stable timer that reads latest rotationRef
+    }, [recording]);
 
-    // Catat roomHistory
+    // record roomHistory when scene changes (prevent duplicates)
     useEffect(() => {
       if (!recording || !sessionRef.current || !currentSceneId) return;
+      if (lastSceneRef.current?.id === currentSceneId) return;
 
       const nowIso = new Date().toISOString();
       const prev = lastSceneRef.current;
@@ -159,14 +191,15 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
       lastSceneRef.current = { id: currentSceneId, name: currentSceneName };
 
-      recordRotation();
-    }, [currentSceneId, currentSceneName, recording, recordRotation]);
+      // record one rotation right after entering a room
+      recordRotationOnce();
+    }, [currentSceneId, currentSceneName, recording]);
 
     const handleStartRecord = () => {
       const startIso = new Date().toISOString();
       const newSession: VRSession = {
         sessionId: crypto.randomUUID(),
-        userId: "guest",
+        userId: user?.id || "guest",
         startTime: startIso,
         endTime: "",
         duration: 0,
@@ -188,12 +221,12 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(newSession));
       setShowModal((p) => ({ ...p, open: false }));
 
-      recordRotation();
+      addToast("Recording started", "success");
       onAllowEnterScene?.();
     };
 
     const handleStopRecord = () => {
-      if (!sessionRef.current) return;
+      if (!recording || !sessionRef.current) return;
       const stopIso = new Date().toISOString();
       const rh = sessionRef.current.roomHistory || [];
       const lastOpenIdx = [...rh].reverse().findIndex((rv) => !rv.exitTime);
@@ -214,7 +247,8 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
           0,
           Math.floor(
             (new Date(stopIso).getTime() -
-              new Date(sessionRef.current.startTime).getTime()) / 1000
+              new Date(sessionRef.current.startTime).getTime()) /
+              1000
           )
         ),
         roomHistory: closedHistory,
@@ -226,10 +260,23 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(finished));
       setShowModal((p) => ({ ...p, open: false }));
       dismissedStartScenes.current.clear();
+
+      if (user) {
+        createSessionMutation.mutate(finished, {
+          onSuccess: () => {
+            addToast("Sesi ini berhasil disimpan!", "success");
+          },
+          onError: () => {
+            addToast("Gagal menyimpan sesi", "error");
+          },
+        });
+      } else {
+        addToast("Recording dihentikan (guest, tidak disimpan)", "success");
+      }
+
       onAllowEnterScene?.();
     };
 
-    // Expose logInteraction
     useImperativeHandle(ref, () => ({
       logInteraction(type: "scene" | "hotspot", targetId: string) {
         if (!sessionRef.current || !recording) return;
@@ -248,18 +295,18 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
         sessionRef.current = updated;
         setSession(updated);
         sessionStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        recordRotation();
+
+        // Also record a rotation snapshot when an interaction happens (optional)
+        recordRotationOnce();
       },
     }));
 
     return (
       <>
-        {/* Indicator status */}
         <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
           {recording ? "REC ●" : session ? "SAVED" : "IDLE"}
         </div>
 
-        {/* Modal konfirmasi */}
         <AnimatePresence>
           {showModal.open && (
             <motion.div
@@ -292,7 +339,6 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
                         setShowModal((p) => ({ ...p, open: false }));
                         onAllowEnterScene?.();
                       } else {
-                        // ❌ jangan stop record kalau pilih "Tidak" di modal stop
                         setShowModal((p) => ({ ...p, open: false }));
                         onAllowEnterScene?.();
                       }

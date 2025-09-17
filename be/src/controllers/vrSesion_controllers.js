@@ -11,11 +11,9 @@ const MAX_TASKS = 10000;
 
 // --- Schema Zod untuk validasi payload ---
 const rotationSchema = z.object({
-  timestamp: z.string().datetime(),
-  rotation: z.object({
-    x: z.number().finite(),
-    y: z.number().finite(),
-  }),
+  timeStamp: z.string().datetime(),
+  rotX: z.number().finite(),
+  rotY: z.number().finite(),
 });
 
 const interactionSchema = z.object({
@@ -68,7 +66,7 @@ const createSessionSchema = z.object({
 const isAdmin = (req) => req?.user?.role === "admin";
 const isSelf = (req, userId) => req?.user?.id && req.user.id === userId;
 
-// --- CREATE ---
+// --- CREATE per Sesi ---
 export const createVRSession = async (req, res) => {
   try {
     // Batasi body size di middleware app: express.json({ limit: '1mb' })
@@ -138,9 +136,9 @@ export const createVRSession = async (req, res) => {
 
           cameraRotations: {
             create: rotations.map((r) => ({
-              timeStamp: new Date(r.timestamp), // field di DB = timeStamp (camel-Pascal case beda)
-              rotX: r.rotation.x,
-              rotY: r.rotation.y,
+              timeStamp: new Date(r.timeStamp), // field di DB = timeStamp (camel-Pascal case beda)
+              rotX: r.rotX,
+              rotY: r.rotY,
             })),
           },
           interactions: {
@@ -185,6 +183,88 @@ export const createVRSession = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+// buat data real-time
+// const realTimeUpdateSchema = z.object({
+//   sessionId: z.string().min(1).max(500),
+//   cameraRotations: z.array(rotationSchema).max(50).optional(),
+//   interactions: z.array(interactionSchema).max(20).optional(),
+//   roomHistory: z.array(roomVisitSchema).max(10).optional(),
+// });
+
+// --- CREATE per detik ---
+// export const updateVRSessionRealtime = async (req, res) => {
+//   try {
+//     const parsed = realTimeUpdateSchema.safeParse(req.body);
+//     if (!parsed.success) {
+//       return res.status(400).json({
+//         message: "Invalid realtime payload",
+//         issues: parsed.error.issues.map((i) => ({
+//           path: i.path.join("."),
+//           message: i.message,
+//         })),
+//       });
+//     }
+
+//     const data = parsed.data;
+
+//     // Pastikan session ada
+//     const session = await prisma.vRSession.findUnique({
+//       where: { sessionId: data.sessionId },
+//       include: { user: true },
+//     });
+//     if (!session) return res.status(404).json({ message: "Session not found" });
+
+//     // Authorisasi: HANYA pemilik session (user biasa) yang boleh update
+//     if (session.user.id !== req.user.id) {
+//       return res
+//         .status(403)
+//         .json({ message: "Forbidden: only session owner can update" });
+//     }
+
+//     // Append data baru per detik
+//     const updated = await prisma.vRSession.update({
+//       where: { sessionId: data.sessionId },
+//       data: {
+//         cameraRotations: {
+//           create: (data.cameraRotations ?? []).map((r) => ({
+//             timeStamp: new Date(r.timestamp),
+//             rotX: r.rotation.x,
+//             rotY: r.rotation.y,
+//           })),
+//         },
+//         interactions: {
+//           create: (data.interactions ?? []).map((i) => ({
+//             type: i.type,
+//             targetId: i.targetId,
+//             timestamp: new Date(i.timestamp),
+//           })),
+//         },
+//         roomHistory: {
+//           create: (data.roomHistory ?? []).map((r) => ({
+//             roomId: r.roomId,
+//             roomName: r.roomName,
+//             enterTime: new Date(r.enterTime),
+//             exitTime: r.exitTime ? new Date(r.exitTime) : null,
+//           })),
+//         },
+//       },
+//     });
+
+//     return res.status(200).json({
+//       message: "Realtime data appended",
+//       sessionId: data.sessionId,
+//       counts: {
+//         rotations: updated.cameraRotations.length,
+//         interactions: updated.interactions.length,
+//         rooms: updated.roomHistory.length,
+//       },
+//     });
+//   } catch (err) {
+//     console.error("updateVRSessionRealtime error:", err?.message);
+//     return res.status(500).json({ message: "Internal server error" });
+//   }
+// };
 
 // --- GET ALL (ADMIN) + pagination & filter ---
 export const getAllVRSession = async (req, res) => {
@@ -298,7 +378,7 @@ export const getOneVRSession = async (req, res) => {
         interactions: true,
         roomHistory: true,
         cameraRotations: true,
-        user: { select: { id: true } },
+        user: { select: { id: true, fullName: true, imgProfile: true } },
       },
     });
 
@@ -336,7 +416,7 @@ export const deleteVRSession = async (req, res) => {
   try {
     if (!isAdmin(req)) return res.status(403).json({ message: "Forbidden" });
 
-    const { id } = req.params;
+    const { sessionId: id } = req.params;
     const deleted = await prisma.vRSession.delete({
       where: { sessionId: id },
       include: {

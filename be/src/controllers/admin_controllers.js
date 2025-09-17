@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { comparePW, hashPW } from "../utils/hashPW.js";
 import { uploadToCloudinary } from "../utils/cloudinary.js";
-import e from "express";
+import { is } from "zod/v4/locales";
 const prisma = new PrismaClient();
 
 export const getMeAdmin = async (req, res) => {
@@ -103,5 +103,80 @@ export const editProfileAdmin = async (req, res) => {
       .status(500)
       .json({ message: "Internal server error", error: error.message });
     console.log("error:", error.message);
+  }
+};
+
+export const getDashboard = async (req, res) => {
+  try {
+    const isAdmin = await prisma.admin.findUnique({
+      where: { id: req.user.id },
+      select: { role: true },
+    });
+    console.log("isAdmin:", isAdmin);
+    if (!isAdmin || isAdmin.role !== "admin") {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    const now = new Date();
+    const startOfWeek = new Date();
+    startOfWeek.setDate(now.getDate() - now.getDay()); // start from Sunday
+
+    // 1️⃣ Ambil semua session (bisa ditambah filter by date jika mau)
+    const sessions = await prisma.vRSession.findMany({
+      include: {
+        interactions: true,
+        user: true,
+      },
+    });
+
+    // 2️⃣ Hitung active users (unik)
+    const activeUsers = new Set(sessions.map((s) => s.userId)).size;
+
+    // 3️⃣ Hitung average session duration
+    const avgDuration =
+      sessions.reduce((acc, cur) => acc + cur.duration, 0) /
+      (sessions.length || 1);
+
+    // 4️⃣ Total XR views = total session count
+    const totalXRViews = sessions.length;
+
+    // 5️⃣ Total interactions
+    const totalInteractions = sessions.reduce(
+      (acc, cur) => acc + cur.interactions.length,
+      0
+    );
+
+    // 6️⃣ Chart data: weekly XR Views & Interactions
+    const chartData = Array.from({ length: 7 }, (_, i) => {
+      const day = new Date(startOfWeek);
+      day.setDate(day.getDate() + i);
+      const dayStr = day.toLocaleDateString("en-US", { weekday: "short" });
+
+      const daySessions = sessions.filter(
+        (s) => s.startTime.toDateString() === day.toDateString()
+      );
+
+      const dayInteractions = daySessions.reduce(
+        (acc, s) => acc + s.interactions.length,
+        0
+      );
+
+      return {
+        name: dayStr,
+        views: daySessions.length,
+        interactions: dayInteractions,
+      };
+    });
+
+    return res.status(200).json({
+      activeUsers,
+      avgDuration,
+      totalXRViews,
+      totalInteractions,
+      chartData,
+    });
+  } catch (error) {
+    console.error("getDashboardData error:", error?.message);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };

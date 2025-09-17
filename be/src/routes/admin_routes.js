@@ -2,6 +2,7 @@ import express from "express";
 import { adminMiddleware, authMiddleware } from "../middlewares/auth.js";
 import {
   editProfileAdmin,
+  getDashboard,
   getMeAdmin,
 } from "../controllers/admin_controllers.js";
 import { upload } from "../utils/multer.js";
@@ -24,5 +25,5 @@ router.put(
   upload.single("imgProfile"),
   editProfileAdmin
 );
-
+router.get("/dashbord", authMiddleware, adminMiddleware, getDashboard);
 export default router;

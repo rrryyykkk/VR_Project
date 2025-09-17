@@ -1,14 +1,14 @@
+// src/components/landingPage/VR/VRModeComponent.tsx
 import { Canvas } from "@react-three/fiber";
-import { XR, createXRStore, useXR, XRControllerModel } from "@react-three/xr";
+import { useState } from "react";
+import { XR, useXR, XRControllerModel } from "@react-three/xr";
 import { OrbitControls } from "@react-three/drei";
 import { FaVrCardboard } from "react-icons/fa";
-import { useState } from "react";
-
-// bikin XR store global
-const store = createXRStore();
+import { xrStore, xrManager } from "../../../hooks/xrStore"; // <- shared store
 
 function SceneContent() {
-  const { session } = useXR(); // session aktif VR
+  // SceneContent berada DI DALAM <XR>, jadi useXR aman di sini
+  const { session } = useXR();
 
   return (
     <>
@@ -31,23 +31,26 @@ function SceneContent() {
 }
 
 export default function VRModeComponent() {
-  const { session } = useXR(); // ✅ ambil session di luar SceneContent juga
   const [isVR, setIsVR] = useState(false);
 
   const handleEnterVR = async () => {
     try {
-      await store.enterXR("immersive-vr"); // masuk VR
+      await xrManager.enterVR();
       setIsVR(true);
     } catch (err) {
-      console.error("VR not supported:", err);
+      console.error("VR not supported or failed to enter:", err);
+      setIsVR(false);
     }
   };
 
   const handleExitVR = async () => {
-    if (session) {
-      await session.end(); // ✅ end dari useXR()
+    try {
+      await xrManager.exitVR();
+    } catch (err) {
+      console.error("failed to exit VR:", err);
+    } finally {
+      setIsVR(false);
     }
-    setIsVR(false);
   };
 
   return (
@@ -76,7 +79,8 @@ export default function VRModeComponent() {
         <ambientLight intensity={0.5} />
         <directionalLight position={[3, 5, 2]} castShadow />
 
-        <XR store={store}>
+        {/* gunakan shared xrStore */}
+        <XR store={xrStore}>
           <SceneContent />
         </XR>
 

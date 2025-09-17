@@ -1,5 +1,4 @@
 // src/components/user/history/HistoryDetailUser.tsx
-import type { VRSession } from "../../../type/VRdata";
 import {
   LineChart,
   Line,
@@ -11,24 +10,89 @@ import {
   Legend,
 } from "recharts";
 import { motion } from "framer-motion";
+import { useVRSessionbySessionId } from "../../../app/store/VrSessionStore";
 
 interface Props {
-  session: VRSession;
+  sessionId: string;
   onClose: () => void;
 }
 
-// Fungsi untuk normalisasi derajat (agar selalu di 0-360)
+// 🔹 Normalisasi derajat (0–360)
 function normalizeDegree(angle: number): number {
   let deg = angle % 360;
   if (deg < 0) deg += 360;
   return deg;
 }
 
-export default function HistoryDetailUser({ session, onClose }: Props) {
+// 🔹 Helper untuk format durasi
+function formatDuration(seconds: number): string {
+  if (!seconds || seconds < 0) return "-";
+  if (seconds < 60) return `${seconds} detik`;
+  if (seconds < 3600)
+    return `${Math.floor(seconds / 60)} menit ${seconds % 60} detik`;
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  return `${hours} jam ${minutes} menit`;
+}
+
+export default function HistoryDetailUser({ sessionId, onClose }: Props) {
+  const {
+    data: session,
+    isLoading,
+    isError,
+    error,
+  } = useVRSessionbySessionId(sessionId);
+  console.log("sessionDetail", session);
+
+  // --- UI Loading ---
+  if (isLoading)
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="flex items-center justify-center h-64"
+      >
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+          className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full"
+        />
+        <p className="ml-4 text-blue-600 font-semibold">
+          Memuat detail sesi...
+        </p>
+      </motion.div>
+    );
+
+  // --- UI Error ---
+  if (isError)
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="p-6 bg-red-100 border border-red-300 rounded-lg text-center space-y-3"
+      >
+        <p className="text-red-600 font-semibold">❌ Gagal memuat data</p>
+        <p className="text-red-500 text-sm">
+          {error?.message || "Terjadi kesalahan"}
+        </p>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg"
+          onClick={onClose}
+        >
+          🔙 Kembali
+        </motion.button>
+      </motion.div>
+    );
+
+  if (!session) return <p>Data tidak ditemukan</p>;
+
+  // 🔹 Siapkan data grafik dari BE (rotX / rotY)
   const rotationData = (session.cameraRotations || []).map((rot) => ({
-    timestamp: new Date(rot.timestamp).toLocaleTimeString(),
-    upDown: normalizeDegree(rot.rotation.x),
-    leftRight: normalizeDegree(rot.rotation.y),
+    timestamp: new Date(rot.timeStamp).toLocaleTimeString(),
+    upDown: normalizeDegree(rot.rotX ?? 0),
+    leftRight: normalizeDegree(rot.rotY ?? 0),
   }));
 
   return (
@@ -44,7 +108,7 @@ export default function HistoryDetailUser({ session, onClose }: Props) {
       {/* Info Umum */}
       <div className="space-y-1 text-lg">
         <p>
-          <strong>👤 Nama:</strong> {session.name || session.userId}
+          <strong>👤 Nama:</strong> {session.user?.fullName || session.userId}
         </p>
         <p>
           <strong>🕒 Waktu:</strong>{" "}
@@ -52,7 +116,7 @@ export default function HistoryDetailUser({ session, onClose }: Props) {
           {new Date(session.endTime).toLocaleString()}
         </p>
         <p>
-          <strong>⏳ Durasi:</strong> {Math.floor(session.duration / 60)} menit
+          <strong>⏳ Durasi:</strong> {formatDuration(session.duration)}
         </p>
         <p>
           <strong>💻 Device:</strong> {session.device || "-"}
@@ -60,13 +124,15 @@ export default function HistoryDetailUser({ session, onClose }: Props) {
       </div>
 
       {/* Hotspots */}
-      {session.hotspots && session.hotspots.length > 0 && (
+      {session.interactions && session.interactions.length > 0 && (
         <div>
           <h3 className="font-semibold text-lg">📍 Hotspots</h3>
           <ul className="list-disc ml-6">
-            {session.hotspots.map((h, i) => (
-              <li key={i}>{h}</li>
-            ))}
+            {session.interactions
+              .filter((i) => i.type === "hotspot")
+              .map((h, i) => (
+                <li key={i}>Hotspot ID: {h.targetId}</li>
+              ))}
           </ul>
         </div>
       )}

@@ -4,7 +4,6 @@ import { useNavigate } from "react-router";
 
 const VRLocationsParent = () => {
   const navigate = useNavigate();
-  console.log(locationsData);
 
   const handleGoVR = (locId: string) => {
     const foundLocation = locationsData.find((loc) => loc.id === locId);

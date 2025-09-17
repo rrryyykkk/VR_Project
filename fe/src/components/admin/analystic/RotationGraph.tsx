@@ -12,16 +12,17 @@ import {
 
 interface RotationGraphProps {
   data: {
-    timestamp: string;
-    rotation: { x: number; y: number };
+    timeStamp: string;
+    rotX: number;
+    rotY: number;
   }[];
 }
 
 export const RotationGraph = ({ data }: RotationGraphProps) => {
   const formatted = data.map((item) => ({
-    time: new Date(item.timestamp).toLocaleTimeString(),
-    x: Number(item.rotation.x.toFixed(2)),
-    y: Number(item.rotation.y.toFixed(2)),
+    time: new Date(item.timeStamp).toLocaleTimeString(),
+    x: Number(item.rotX.toFixed(2)),
+    y: Number(item.rotY.toFixed(2)),
   }));
 
   return (

@@ -8,6 +8,9 @@ type ProtectedRouteProps = {
 
 export default function ProtectedRoute({ role }: ProtectedRouteProps) {
   const { user, admin, role: currentRole, loading } = useAuthStore();
+  console.log("currentRole", currentRole);
+  console.log("user", user);
+  console.log("admin", admin);
 
   const currentUser = currentRole === "admin" ? admin : user;
 

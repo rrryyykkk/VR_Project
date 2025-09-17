@@ -16,6 +16,7 @@ import VRRecorder, {
 
 import { xrStore } from "../../hooks/xrStore";
 import { XR } from "@react-three/xr";
+import { useUserProfile } from "../../app/store/UserStore";
 
 export default function VRView() {
   const { locationId } = useParams();
@@ -24,6 +25,9 @@ export default function VRView() {
   // ambil status loading (progress dari drei)
   const { progress } = useProgress();
   const isLoaded = progress === 100;
+  const { data: user } = useUserProfile({
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
 
   const startSceneIds = ["29", "30", "39", "40"];
   const exitSceneIds = ["27", "28", "41", "42", "44"];
@@ -149,6 +153,7 @@ export default function VRView() {
         rotation={rotasiKamera}
         startSceneIds={startSceneIds}
         exitSceneIds={exitSceneIds}
+        user={user}
       />
 
       {/* Footer */}
@@ -160,7 +165,7 @@ export default function VRView() {
           if (targetIndex !== -1) setCurrentSceneIndex(targetIndex);
           recorderRef.current?.logInteraction("scene", id);
         }}
-        user={null}
+        user={user}
       />
     </div>
   );

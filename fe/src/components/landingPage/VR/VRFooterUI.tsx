@@ -1,8 +1,9 @@
+// src/components/landingPage/VR/VRFooterUI.tsx
 import { FaVrCardboard } from "react-icons/fa";
 import { motion } from "framer-motion";
-import { useEffect, useRef } from "react";
-import { useXR } from "@react-three/xr";
+import { useEffect, useRef, useState } from "react";
 import { xrManager } from "../../../hooks/xrStore";
+import type { User } from "../../../type/user";
 
 interface SceneCard {
   id: string;
@@ -14,7 +15,7 @@ interface VRFooterProps {
   scenes: SceneCard[];
   currentSceneId: string;
   onSelectScene: (id: string) => void;
-  user?: { name: string; room?: string } | null;
+  user?: User | null;
 }
 
 export default function VRFooter({
@@ -26,9 +27,15 @@ export default function VRFooter({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const activeRef = useRef<HTMLDivElement | null>(null);
 
-  // cek session aktif
-  const { session } = useXR();
-  const isPresenting = !!session;
+  const [isPresenting, setIsPresenting] = useState<boolean>(
+    xrManager.isPresenting()
+  );
+
+  // subscribe ke perubahan session (subscribe returns unsubscribe)
+  useEffect(() => {
+    const unsub = xrManager.subscribe((v) => setIsPresenting(v));
+    return () => unsub && unsub();
+  }, []);
 
   // auto scroll ke scene aktif
   useEffect(() => {
@@ -74,17 +81,18 @@ export default function VRFooter({
 
       {/* Tengah: Info user */}
       <div className="text-center">
-        <p className="text-base font-semibold">{user?.name || "Guest"}</p>
-        <p className="text-sm text-gray-300">{user?.room || "No Room"}</p>
+        <p className="text-base font-semibold">{user?.fullName || "Guest"}</p>
       </div>
 
       {/* Kanan: Control */}
       <div className="flex justify-end gap-4">
         <button
-          onClick={
-            isPresenting ? xrManager.exitVR : xrManager.enterVR // masuk VR
-          }
+          onClick={() => {
+            if (isPresenting) xrManager.exitVR();
+            else xrManager.enterVR();
+          }}
           className="p-2 bg-blue-600 hover:bg-blue-500 rounded-full"
+          title={isPresenting ? "Exit VR" : "Enter VR"}
         >
           <FaVrCardboard size={20} />
         </button>

@@ -1,15 +1,36 @@
+// src/pages/admin/AnalyticById.tsx
 import { motion } from "framer-motion";
 import { useParams, useNavigate } from "react-router";
-import { adminSessions } from "../../data/VRsession";
+import { useVRSessionbySessionId } from "../../app/store/VrSessionStore";
 import StatCard from "../../components/admin/analystic/StatCard";
 import { RotationGraph } from "../../components/admin/analystic/RotationGraph";
 
 const AnalyticById = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const session = adminSessions.find((s) => s.sessionId === id);
 
-  if (!session) return <div className="p-6">❌ Data tidak ditemukan</div>;
+  // Ambil data VR session dari backend
+  const { data: session, isLoading, isError } = useVRSessionbySessionId(id!);
+
+  // ⚡ Fix TS: default array hanya untuk roomHistory
+  const roomHistory = session?.roomHistory || [];
+
+  if (isLoading)
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <span className="ml-4 text-lg text-gray-700">Loading data...</span>
+      </div>
+    );
+
+  if (isError || !session)
+    return (
+      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-6 rounded-lg flex items-center justify-center h-64">
+        <span className="text-lg font-semibold">
+          ❌ Data tidak ditemukan atau terjadi kesalahan.
+        </span>
+      </div>
+    );
 
   return (
     <motion.div
@@ -18,24 +39,36 @@ const AnalyticById = () => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
     >
-      <h2 className="text-2xl font-bold mb-4">Detail Analitik: {session.name}</h2>
+      <h2 className="text-2xl font-bold mb-4">
+        Detail Analitik: {session.user?.fullName || "-"}
+      </h2>
 
       {/* Statistik utama */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard
           label="Durasi Sesi"
-          value={`${Math.floor(session.duration / 60)}m ${session.duration % 60}s`}
+          value={`${Math.floor(session.duration / 60)}m ${
+            session.duration % 60
+          }s`}
         />
         <StatCard label="Perangkat" value={session.device || "-"} />
-        <StatCard label="Sesi Sebelumnya" value={session.previousSessionId || "Tidak ada"} />
+        <StatCard
+          label="Sesi Sebelumnya"
+          value={session.previousSessionId || "Tidak ada"}
+        />
       </div>
 
-      {/* Hotspots */}
+      {/* Hotspots → pakai interactions */}
       <section className="bg-base-100 p-4 rounded-xl shadow">
         <h3 className="text-xl font-semibold mb-2">Hotspot yang Dikunjungi</h3>
         <ul className="list-disc list-inside">
-          {session.hotspots && session.hotspots.length > 0 ? (
-            session.hotspots.map((h, i) => <li key={i}>{h}</li>)
+          {session.interactions?.length ? (
+            session.interactions.map((h) => (
+              <li key={h.id}>
+                {h.type} → Target: {h.targetId || "-"} (
+                {new Date(h.timestamp).toLocaleTimeString()})
+              </li>
+            ))
           ) : (
             <li>-</li>
           )}
@@ -43,28 +76,14 @@ const AnalyticById = () => {
       </section>
 
       {/* Riwayat Ruangan */}
-      {session.roomHistory && session.roomHistory.length > 0 && (
+      {roomHistory.length > 0 && (
         <section className="bg-base-100 p-4 rounded-xl shadow">
           <h3 className="text-xl font-semibold mb-2">Riwayat Ruangan</h3>
           <ul className="list-disc list-inside">
-            {session.roomHistory.map((r, i) => (
-              <li key={i}>
+            {roomHistory.map((r) => (
+              <li key={r.roomId}>
                 {r.roomName} ({new Date(r.enterTime).toLocaleTimeString()} -{" "}
                 {new Date(r.exitTime).toLocaleTimeString()})
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {/* Tugas */}
-      {session.tasks && session.tasks.length > 0 && (
-        <section className="bg-base-100 p-4 rounded-xl shadow">
-          <h3 className="text-xl font-semibold mb-2">Tugas</h3>
-          <ul className="list-disc list-inside">
-            {session.tasks.map((t, i) => (
-              <li key={i}>
-                {t.taskName} - <em>{t.status}</em> ({t.timeSpent}s)
               </li>
             ))}
           </ul>
@@ -81,7 +100,7 @@ const AnalyticById = () => {
       <div className="flex justify-end">
         <button
           onClick={() => navigate("/admin/analytics")}
-          className="btn btn-secondary px-4 py-2 rounded-lg"
+          className="btn btn-secondary px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors"
         >
           🔙 Kembali ke Daftar
         </button>

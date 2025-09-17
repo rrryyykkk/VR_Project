@@ -11,3 +11,8 @@ export const editProfileAdmin = async (data: FormData) => {
   });
   return res.data;
 };
+
+export const getDashboard = async () => {
+  const res = await api.get("/admin/dashbord");
+  return res.data;
+};

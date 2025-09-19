@@ -12,17 +12,6 @@ const About = () => {
     ],
   };
 
-  const strukturOrganisasi = {
-    kepala: { role: "Kepala Peneliti", name: "Dr. Siti Rahma" },
-    wakil: { role: "Wakil Peneliti", name: "Ahmad Fauzi, M.Sc" },
-    tim: [
-      { role: "Ahli Neurokognitif", name: "dr. Indah Lestari" },
-      { role: "Engineer VR", name: "Maya Sari" },
-      { role: "Data Scientist", name: "Dian Kusuma" },
-      { role: "Administrasi Penelitian", name: "Rahmat Hidayat" },
-    ],
-  };
-
   return (
     <div className="relative overflow-hidden">
       {/* SEO Meta Tags */}
@@ -103,71 +92,6 @@ const About = () => {
               <li key={idx}>{item}</li>
             ))}
           </ul>
-        </motion.div>
-
-        {/* Struktur Organisasi Tree */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-          className="mt-16"
-        >
-          <h2 className="text-2xl md:text-3xl font-bold text-fuchsia-700 mb-8 text-center">
-            Tim Penelitian MIND Platform
-          </h2>
-
-          <div className="flex flex-col items-center space-y-6">
-            {/* Kepala */}
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="bg-white rounded-xl shadow-lg px-6 py-4 text-center border border-fuchsia-100 hover:border-fuchsia-300 transition w-64"
-            >
-              <p className="text-fuchsia-600 font-semibold">
-                {strukturOrganisasi.kepala.role}
-              </p>
-              <p className="text-gray-800 text-lg font-bold">
-                {strukturOrganisasi.kepala.name}
-              </p>
-            </motion.div>
-
-            {/* Arrow */}
-            <div className="text-fuchsia-400 text-3xl animate-bounce">↓</div>
-
-            {/* Wakil */}
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="bg-white rounded-xl shadow-lg px-6 py-4 text-center border border-fuchsia-100 hover:border-fuchsia-300 transition w-64"
-            >
-              <p className="text-fuchsia-600 font-semibold">
-                {strukturOrganisasi.wakil.role}
-              </p>
-              <p className="text-gray-800 text-lg font-bold">
-                {strukturOrganisasi.wakil.name}
-              </p>
-            </motion.div>
-
-            {/* Arrow */}
-            <div className="text-fuchsia-400 text-3xl animate-bounce">↓</div>
-
-            {/* Tim */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {strukturOrganisasi.tim.map((person, idx) => (
-                <motion.div
-                  key={idx}
-                  whileHover={{ scale: 1.05 }}
-                  className="bg-white rounded-xl shadow-md px-4 py-4 text-center border border-fuchsia-100 hover:border-fuchsia-300 transition"
-                >
-                  <p className="text-fuchsia-600 font-semibold">
-                    {person.role}
-                  </p>
-                  <p className="text-gray-800 font-medium mt-1">
-                    {person.name}
-                  </p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
         </motion.div>
       </div>
 

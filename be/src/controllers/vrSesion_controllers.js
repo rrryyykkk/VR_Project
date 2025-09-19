@@ -20,6 +20,8 @@ const interactionSchema = z.object({
   id: z.string().min(1).max(500),
   type: z.enum(["scene", "hotspot"]),
   targetId: z.string().min(1).max(500).optional(),
+  targetName: z.string().min(1).max(500).optional(),
+  targetType: z.string().min(1).max(500).optional(),
   timestamp: z.string().datetime(),
 });
 
@@ -121,57 +123,71 @@ export const createVRSession = async (req, res) => {
     const rooms = (data.roomHistory ?? []).slice(0, MAX_ROOM_HISTORY);
     const tasks = (data.tasks ?? []).slice(0, MAX_TASKS);
 
-    // Transaksi untuk nested create
+    // Transaksi + bulk insert
+
     const session = await prisma.$transaction(async (tx) => {
-      // NB: skema DB kamu TIDAK ada 'name' & 'hotspots'
+      // buat session utama
       const created = await tx.vRSession.create({
         data: {
-          // sessionId: data.sessionId, // boleh diaktifkan kalau mau pakai dari FE, else biarkan cuid()
           user: { connect: { id: data.userId } },
           startTime: start,
           endTime: end,
           duration: serverDuration,
           device: data.device,
           previousSessionId: data.previousSessionId,
-
-          cameraRotations: {
-            create: rotations.map((r) => ({
-              timeStamp: new Date(r.timeStamp), // field di DB = timeStamp (camel-Pascal case beda)
-              rotX: r.rotX,
-              rotY: r.rotY,
-            })),
-          },
-          interactions: {
-            create: interactions.map((i) => ({
-              type: i.type, // pastikan "hotspot" bukan "hostspot"
-              targetId: i.targetId,
-              timestamp: new Date(i.timestamp),
-            })),
-          },
-          roomHistory: {
-            create: rooms.map((room) => ({
-              roomId: room.roomId,
-              roomName: room.roomName,
-              enterTime: new Date(room.enterTime),
-              exitTime: new Date(room.exitTime),
-            })),
-          },
-          tasks: {
-            create: tasks.map((t) => ({
-              taskId: t.taskId,
-              taskName: t.taskName,
-              status: t.status, // "completed" | "failed" | "pending"
-              timeSpent: t.timeSpent,
-            })),
-          },
-        },
-        include: {
-          tasks: true,
-          interactions: true,
-          roomHistory: true,
-          cameraRotations: true,
         },
       });
+      // bulk insert task
+      if (tasks.length) {
+        await tx.task.createMany({
+          data: tasks.map((task) => ({
+            sessionId: created.sessionId,
+            taskId: task.taskId,
+            taskName: task.taskName,
+            Status: task.status,
+            timeSpent: task.timeSpent,
+          })),
+        });
+      }
+
+      // bulk insert interactions
+      if (interactions.length) {
+        await tx.interaction.createMany({
+          data: interactions.map((interaction) => ({
+            sessionId: created.sessionId,
+            type: interaction.type,
+            targetId: interaction.targetId,
+            targetName: interaction.targetName,
+            targetType: interaction.targetType,
+            timestamp: new Date(interaction.timestamp),
+          })),
+        });
+      }
+
+      // bulk insert rotations
+      if (rotations.length) {
+        await tx.cameraRotation.createMany({
+          data: rotations.map((rotation) => ({
+            sessionId: created.sessionId,
+            timeStamp: new Date(rotation.timeStamp),
+            rotX: rotation.rotX,
+            rotY: rotation.rotY,
+          })),
+        });
+      }
+
+      // bulk insert rooms history
+      if (rooms.length) {
+        await tx.roomVisit.createMany({
+          data: rooms.map((room) => ({
+            sessionId: created.sessionId,
+            roomId: room.roomId,
+            roomName: room.roomName,
+            enterTime: new Date(room.enterTime),
+            exitTime: room.exitTime ? new Date(room.exitTime) : null,
+          })),
+        });
+      }
 
       return created;
     });

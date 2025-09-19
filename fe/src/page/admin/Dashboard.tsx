@@ -15,7 +15,7 @@ import { useGetDashboard } from "../../app/store/AdminStore";
 // Tipe data dashboard
 export interface DashboardData {
   activeUsers: number;
-  avgDuration: number; // dalam detik
+  averageSessions: number; // dalam detik
   totalXRViews: number;
   totalInteractions: number;
   chartData: { name: string; views: number; interactions: number }[];
@@ -48,7 +48,7 @@ const Dashboard = () => {
     },
     {
       title: "Average Session",
-      value: formatDuration(data.avgDuration),
+      value: formatDuration(data.averageSessions),
       icon: <FiClock className="text-green-500 text-3xl" />,
     },
     {

@@ -25,6 +25,8 @@ export interface Interaction {
   id: string;
   type: "scene" | "hotspot";
   targetId?: string;
+  targetName?: string;
+  targetType?: string;
   timestamp: string;
 }
 

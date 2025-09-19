@@ -1,26 +1,11 @@
 // VRSessionAdmin.tsx
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { adminSessions } from "../../data/VRsession";
-import { type UserVR } from "../../type/user";
-import type { VRSession } from "../../type/VRdata";
+import type { UserVR } from "../../type/user";
 import { useAllUsers } from "../../app/store/UserStore";
-
-// Extend VRSession dengan isActive
-interface VRSessionActive extends VRSession {
-  isActive?: boolean;
-}
-
-const formatDuration = (seconds: number) => {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m} menit ${s} detik`;
-};
 
 const VRSessionAdmin = () => {
   const [selectedUser, setSelectedUser] = useState<UserVR | null>(null);
-  const [selectedSession, setSelectedSession] =
-    useState<VRSessionActive | null>(null);
 
   const {
     data: users = [],
@@ -32,35 +17,13 @@ const VRSessionAdmin = () => {
     isError: boolean;
   };
 
-  // Ambil sesi VR aktif berdasarkan user
-  const getActiveSessionByUser = (userId: string): VRSessionActive | null => {
-    const sessions = adminSessions
-      .filter((s: VRSessionActive) => s.userId === userId && s.isActive)
-      .sort(
-        (a, b) =>
-          new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
-      );
-    return sessions.length > 0 ? sessions[0] : null;
-  };
-
-  const getLastRoomName = (session: VRSessionActive | null): string => {
-    if (!session?.roomHistory?.length) return "-";
-    const sortedRooms = [...session.roomHistory].sort(
-      (a, b) =>
-        new Date(b.enterTime).getTime() - new Date(a.enterTime).getTime()
-    );
-    return sortedRooms[0].roomName;
-  };
 
   const openUserDetail = (user: UserVR) => {
     setSelectedUser(user);
-    const activeSession = getActiveSessionByUser(user.id);
-    setSelectedSession(activeSession); // Hanya ambil session yang isActive
   };
 
   const closeModal = () => {
     setSelectedUser(null);
-    setSelectedSession(null);
   };
 
   if (isLoading) return <p>Loading users...</p>;
@@ -86,11 +49,11 @@ const VRSessionAdmin = () => {
             <th className="border border-gray-300 px-4 py-2 text-center">
               Status Login
             </th>
-            <th className="border border-gray-300 px-4 py-2 text-left">
-              Perangkat
+            <th className="border border-gray-300 px-4 py-2 text-center">
+              Status VR
             </th>
             <th className="border border-gray-300 px-4 py-2 text-left">
-              Ruang Terakhir
+              Perangkat
             </th>
             <th className="border border-gray-300 px-4 py-2 text-center">
               Aksi
@@ -98,47 +61,44 @@ const VRSessionAdmin = () => {
           </tr>
         </thead>
         <tbody>
-          {users.map((user) => {
-            const activeSession = getActiveSessionByUser(user.id);
-            const lastRoom = getLastRoomName(activeSession);
-
-            return (
-              <tr
-                key={user.id}
-                className="hover:bg-gray-50 cursor-pointer"
-                onClick={() => openUserDetail(user)}
+          {users.map((user) => (
+            <tr
+              key={user.id}
+              className="hover:bg-gray-50 cursor-pointer"
+              onClick={() => openUserDetail(user)}
+            >
+              <td className="border border-gray-300 px-4 py-2">
+                {user.fullName}
+              </td>
+              <td className="border border-gray-300 px-4 py-2">{user.email}</td>
+              <td className="border border-gray-300 px-4 py-2 text-center">
+                {user.age}
+              </td>
+              <td className="border border-gray-300 px-4 py-2 text-center">
+                {user.gender}
+              </td>
+              <td
+                className={`border border-gray-300 px-4 py-2 text-center font-semibold ${
+                  user.isLogin ? "text-green-700" : "text-red-500"
+                }`}
               >
-                <td className="border border-gray-300 px-4 py-2">
-                  {user.fullName}
-                </td>
-                <td className="border border-gray-300 px-4 py-2">
-                  {user.email}
-                </td>
-                <td className="border border-gray-300 px-4 py-2 text-center">
-                  {user.age}
-                </td>
-                <td className="border border-gray-300 px-4 py-2 text-center">
-                  {user.gender}
-                </td>
-                <td
-                  className={`border border-gray-300 px-4 py-2 text-center font-semibold ${
-                    user.isLogin ? "text-green-700" : "text-red-500"
-                  }`}
-                >
-                  {user.isLogin ? "Sedang Login" : "Tidak Login"}
-                </td>
-                <td className="border border-gray-300 px-4 py-2">
-                  {activeSession?.device || "-"}
-                </td>
-                <td className="border border-gray-300 px-4 py-2">
-                  {activeSession ? lastRoom : "-"}
-                </td>
-                <td className="border border-gray-300 px-4 py-2 text-center text-blue-600 underline">
-                  Lihat Detail
-                </td>
-              </tr>
-            );
-          })}
+                {user.isLogin ? "Sedang Login" : "Tidak Login"}
+              </td>
+              <td
+                className={`border border-gray-300 px-4 py-2 text-center font-semibold ${
+                  user.isActive ? "text-blue-700" : "text-gray-400"
+                }`}
+              >
+                {user.isActive ? "Aktif VR" : "Tidak Aktif"}
+              </td>
+              <td className="border border-gray-300 px-4 py-2">
+                {user.device || "-"}
+              </td>
+              <td className="border border-gray-300 px-4 py-2 text-center text-blue-600 underline">
+                Lihat Detail
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
 
@@ -167,52 +127,29 @@ const VRSessionAdmin = () => {
               </button>
 
               <h2 className="text-2xl font-bold mb-4">
-                Sesi VR {selectedUser.fullName}
+                Detail {selectedUser.fullName}
               </h2>
 
-              {!selectedSession && (
-                <p>Pengguna ini sedang tidak aktif di VR.</p>
-              )}
-
-              {selectedSession && (
-                <>
-                  <p>
-                    <strong>ID Sesi:</strong> {selectedSession.sessionId}
-                  </p>
-                  <p>
-                    <strong>Perangkat:</strong> {selectedSession.device}
-                  </p>
-                  <p>
-                    <strong>Durasi:</strong>{" "}
-                    {formatDuration(selectedSession.duration)}
-                  </p>
-                  <p>
-                    <strong>Waktu Mulai:</strong>{" "}
-                    {new Date(selectedSession.startTime).toLocaleString()}
-                  </p>
-                  <p>
-                    <strong>Waktu Selesai:</strong>{" "}
-                    {new Date(selectedSession.endTime).toLocaleString()}
-                  </p>
-
-                  <div className="mt-4">
-                    <strong>Ruang yang Dikunjungi:</strong>
-                    {selectedSession.roomHistory?.length ? (
-                      <ul className="list-disc list-inside">
-                        {selectedSession.roomHistory.map((room) => (
-                          <li key={room.roomId}>
-                            {room.roomName} (
-                            {new Date(room.enterTime).toLocaleTimeString()} -{" "}
-                            {new Date(room.exitTime).toLocaleTimeString()})
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p>-</p>
-                    )}
-                  </div>
-                </>
-              )}
+              <p>
+                <strong>Email:</strong> {selectedUser.email}
+              </p>
+              <p>
+                <strong>Umur:</strong> {selectedUser.age}
+              </p>
+              <p>
+                <strong>Gender:</strong> {selectedUser.gender}
+              </p>
+              <p>
+                <strong>Status Login:</strong>{" "}
+                {selectedUser.isLogin ? "Sedang Login" : "Tidak Login"}
+              </p>
+              <p>
+                <strong>Status VR:</strong>{" "}
+                {selectedUser.isActive ? "Aktif VR" : "Tidak Aktif"}
+              </p>
+              <p>
+                <strong>Perangkat:</strong> {selectedUser.device || "-"}
+              </p>
             </motion.div>
           </motion.div>
         )}

@@ -1,2 +1,14 @@
 @import "tailwindcss";
 @plugin "daisyui";
+
+/* sembunyikan semua tombol WebXR bawaan */
+#VRButton,
+#xrButton,
+.xr-button,
+button[data-webxr],
+button[data-testid="xr-button"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}

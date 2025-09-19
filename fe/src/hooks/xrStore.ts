@@ -3,6 +3,7 @@ import { createXRStore } from "@react-three/xr";
 // Definisikan shape dari state xrStore
 interface XRState {
   session?: XRSession | null;
+
   // tambahkan kalau ada property lain yg dipakai
 }
 

@@ -1,27 +1,39 @@
 import { Route, Routes } from "react-router";
+// public routes
 import Home from "./page/landingPage/Home";
 import About from "./page/landingPage/About";
 import Contact from "./page/landingPage/Contact";
+import VRViewParent from "./page/landingPage/VRViewParent";
+import VRView from "./page/landingPage/VRView";
+import Insight from "./page/landingPage/Insight";
+// layout
 import LandingPage from "./layout/LandingPageLayout";
-import ProfilePageUser from "./page/users/ProfilePageUser";
 import AdminLayout from "./layout/AdminLayout";
+import UsersLayout from "./layout/userLayout";
+// users
+import ProfilePageUser from "./page/users/ProfilePageUser";
+import HistoryPageUsers from "./page/users/HistoryPageUser";
+// admin
 import Dashboard from "./page/admin/Dashboard";
 import UsersPage from "./page/admin/Users";
 import AnalyticById from "./page/admin/AnalyticById";
 import ProfilePage from "./page/admin/ProfileAdmin";
+import Analytic from "./page/admin/Analytic";
+import VRSessionAdmin from "./page/admin/VRSessionAdmin";
+// aut
 import LoginUsers from "./page/auth/LoginUsers";
 import LoginAdmin from "./page/auth/LoginAdmin";
-import UsersLayout from "./layout/userLayout";
-import HistoryPageUsers from "./page/users/HistoryPageUser";
-import Analytic from "./page/admin/Analytic";
-import { adminSessions } from "./data/VRsession";
-import VRSessionAdmin from "./page/admin/VRSessionAdmin";
-import VRViewParent from "./page/landingPage/VRViewParent";
-import VRView from "./page/landingPage/VRView";
-import Insight from "./page/landingPage/Insight";
+// middleware
 import ProtectedRoute from "./middleware/ProtectedRoutes";
+// hooks
+import { useEffect } from "react";
 
 const App = () => {
+  useEffect(() => {
+    const btn = document.getElementById("VRButton");
+    if (btn) btn.remove(); // hapus tombol bawaan
+  }, []);
+
   return (
     <Routes>
       {/* landing page */}
@@ -91,7 +103,7 @@ const App = () => {
           path="/admin/analytics"
           element={
             <AdminLayout>
-              <Analytic sessions={adminSessions} />
+              <Analytic />
             </AdminLayout>
           }
         />

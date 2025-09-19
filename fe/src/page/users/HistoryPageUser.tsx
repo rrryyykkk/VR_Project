@@ -17,7 +17,6 @@ export default function HistoryPageUser() {
     isError,
     error,
   } = useVRSessionAllbyUser(user?.id || "");
-  console.log("sessions", sessions);
 
   if (isLoading || sessionsLoading) return <p>Loading...</p>;
   if (isError) return <p>Error: {error?.message}</p>;

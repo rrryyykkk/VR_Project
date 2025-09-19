@@ -11,8 +11,9 @@ const AnalyticById = () => {
 
   // Ambil data VR session dari backend
   const { data: session, isLoading, isError } = useVRSessionbySessionId(id!);
+  console.log("session", session);
 
-  // ⚡ Fix TS: default array hanya untuk roomHistory
+  // ⚡ Default fallback array
   const roomHistory = session?.roomHistory || [];
 
   if (isLoading)
@@ -61,18 +62,32 @@ const AnalyticById = () => {
       {/* Hotspots → pakai interactions */}
       <section className="bg-base-100 p-4 rounded-xl shadow">
         <h3 className="text-xl font-semibold mb-2">Hotspot yang Dikunjungi</h3>
-        <ul className="list-disc list-inside">
-          {session.interactions?.length ? (
-            session.interactions.map((h) => (
-              <li key={h.id}>
-                {h.type} → Target: {h.targetId || "-"} (
-                {new Date(h.timestamp).toLocaleTimeString()})
-              </li>
-            ))
-          ) : (
-            <li>-</li>
-          )}
-        </ul>
+        {session.interactions?.length ? (
+          <div className="overflow-x-auto">
+            <table className="table table-zebra w-full">
+              <thead>
+                <tr>
+                  <th>Waktu</th>
+                  <th>Tipe</th>
+                  <th>Target</th>
+                  <th>Kategori</th>
+                </tr>
+              </thead>
+              <tbody>
+                {session.interactions.map((h) => (
+                  <tr key={h.id}>
+                    <td>{new Date(h.timestamp).toLocaleTimeString()}</td>
+                    <td className="capitalize">{h.type}</td>
+                    <td>{h.targetName || h.targetId || "-"}</td>
+                    <td>{h.targetType || "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-gray-500">-</p>
+        )}
       </section>
 
       {/* Riwayat Ruangan */}

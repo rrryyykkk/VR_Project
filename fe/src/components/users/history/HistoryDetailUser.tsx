@@ -124,18 +124,35 @@ export default function HistoryDetailUser({ sessionId, onClose }: Props) {
       </div>
 
       {/* Hotspots */}
-      {session.interactions && session.interactions.length > 0 && (
-        <div>
-          <h3 className="font-semibold text-lg">📍 Hotspots</h3>
-          <ul className="list-disc ml-6">
-            {session.interactions
-              .filter((i) => i.type === "hotspot")
-              .map((h, i) => (
-                <li key={i}>Hotspot ID: {h.targetId}</li>
-              ))}
-          </ul>
-        </div>
-      )}
+      <section className="bg-base-100 p-4 rounded-xl shadow">
+        <h3 className="text-xl font-semibold mb-2">Hotspot yang Dikunjungi</h3>
+        {session.interactions?.length ? (
+          <div className="overflow-x-auto">
+            <table className="table table-zebra w-full">
+              <thead>
+                <tr>
+                  <th>Waktu</th>
+                  <th>Tipe</th>
+                  <th>Target</th>
+                  <th>Kategori</th>
+                </tr>
+              </thead>
+              <tbody>
+                {session.interactions.map((h) => (
+                  <tr key={h.id}>
+                    <td>{new Date(h.timestamp).toLocaleTimeString()}</td>
+                    <td className="capitalize">{h.type}</td>
+                    <td>{h.targetName || h.targetId || "-"}</td>
+                    <td>{h.targetType || "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-gray-500">-</p>
+        )}
+      </section>
 
       {/* Riwayat Ruangan */}
       {session.roomHistory && session.roomHistory.length > 0 && (

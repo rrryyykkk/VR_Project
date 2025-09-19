@@ -137,6 +137,8 @@ model Interaction {
   id String @id @default(cuid())
   type String
   targetId String?
+  targetName String?
+  targetType String?
   timestamp DateTime
 
   // Relasi ke VR Session

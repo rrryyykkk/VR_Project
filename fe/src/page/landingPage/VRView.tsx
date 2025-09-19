@@ -1,3 +1,4 @@
+// src/pages/VR/VRView.tsx
 import { Canvas } from "@react-three/fiber";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router";
@@ -18,13 +19,27 @@ import { xrStore } from "../../hooks/xrStore";
 import { XR } from "@react-three/xr";
 import { useUserProfile } from "../../app/store/UserStore";
 
+// ✅ helper untuk build target object
+function buildInteractionTarget(
+  _type: "scene" | "hotspot",
+  data: { id: string; name: string; targetType: string }
+) {
+  return {
+    id: data.id,
+    name: data.name,
+    targetType: data.targetType,
+  };
+}
+
 export default function VRView() {
   const { locationId } = useParams();
   const { state } = useLocation();
   const views: SceneData[] = state?.views || [];
+
   // ambil status loading (progress dari drei)
   const { progress } = useProgress();
   const isLoaded = progress === 100;
+
   const { data: user } = useUserProfile({
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
@@ -121,9 +136,15 @@ export default function VRView() {
                         (v) => v.id === hs.targetId
                       );
                       if (targetIndex !== -1) setCurrentSceneIndex(targetIndex);
+
+                      // ✅ log hotspot interaction pakai object
                       recorderRef.current?.logInteraction(
                         "hotspot",
-                        hs.targetId
+                        buildInteractionTarget("hotspot", {
+                          id: hs.targetId,
+                          name: hs.name,
+                          targetType: hs.type,
+                        })
                       );
                     }
                   }}
@@ -161,9 +182,21 @@ export default function VRView() {
         scenes={views.map((v) => ({ id: v.id, name: v.name, image: v.image }))}
         currentSceneId={currentScene.id}
         onSelectScene={(id) => {
-          const targetIndex = views.findIndex((v) => v.id === id);
-          if (targetIndex !== -1) setCurrentSceneIndex(targetIndex);
-          recorderRef.current?.logInteraction("scene", id);
+          const targetScene = views.find((v) => v.id === id);
+          if (targetScene) {
+            const targetIndex = views.findIndex((v) => v.id === id);
+            if (targetIndex !== -1) setCurrentSceneIndex(targetIndex);
+
+            // ✅ log scene interaction pakai object
+            recorderRef.current?.logInteraction(
+              "scene",
+              buildInteractionTarget("scene", {
+                id: targetScene.id,
+                name: targetScene.name,
+                targetType: "scene",
+              })
+            );
+          }
         }}
         user={user}
       />

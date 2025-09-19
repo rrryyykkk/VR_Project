@@ -1,9 +1,8 @@
 // src/components/landingPage/VR/VRModeComponent.tsx
 import { Canvas } from "@react-three/fiber";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { XR, useXR, XRControllerModel } from "@react-three/xr";
 import { OrbitControls } from "@react-three/drei";
-import { FaVrCardboard } from "react-icons/fa";
 import { xrStore, xrManager } from "../../../hooks/xrStore"; // <- shared store
 
 function SceneContent() {
@@ -33,15 +32,10 @@ function SceneContent() {
 export default function VRModeComponent() {
   const [isVR, setIsVR] = useState(false);
 
-  const handleEnterVR = async () => {
-    try {
-      await xrManager.enterVR();
-      setIsVR(true);
-    } catch (err) {
-      console.error("VR not supported or failed to enter:", err);
-      setIsVR(false);
-    }
-  };
+  useEffect(() => {
+    const unsub = xrManager.subscribe((v) => setIsVR(v));
+    return () => unsub && unsub();
+  }, []);
 
   const handleExitVR = async () => {
     try {
@@ -55,31 +49,22 @@ export default function VRModeComponent() {
 
   return (
     <div className="w-full h-screen bg-black">
-      {/* Tombol kontrol */}
-      <div className="absolute top-4 right-4 z-10">
-        {!isVR ? (
-          <button
-            onClick={handleEnterVR}
-            className="p-3 bg-blue-600 hover:bg-blue-500 rounded-full text-white flex items-center gap-2"
-          >
-            <FaVrCardboard size={18} /> Enter VR
-          </button>
-        ) : (
+      {/* Tombol Exit VR hanya kalau lagi dalam headset */}
+      {isVR && (
+        <div className="absolute top-4 right-4 z-10">
           <button
             onClick={handleExitVR}
             className="p-3 bg-red-600 hover:bg-red-500 rounded-full text-white flex items-center gap-2"
           >
             Exit VR
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Canvas + XR */}
       <Canvas shadows camera={{ position: [0, 1.6, 3], fov: 70 }}>
         <ambientLight intensity={0.5} />
         <directionalLight position={[3, 5, 2]} castShadow />
 
-        {/* gunakan shared xrStore */}
         <XR store={xrStore}>
           <SceneContent />
         </XR>

@@ -112,7 +112,6 @@ export const getDashboard = async (req, res) => {
       where: { id: req.user.id },
       select: { role: true },
     });
-    console.log("isAdmin:", isAdmin);
     if (!isAdmin || isAdmin.role !== "admin") {
       return res.status(403).json({ message: "Forbidden" });
     }
@@ -136,6 +135,7 @@ export const getDashboard = async (req, res) => {
     const avgDuration =
       sessions.reduce((acc, cur) => acc + cur.duration, 0) /
       (sessions.length || 1);
+    const averageSessions = Number(avgDuration.toFixed(2));
 
     // 4️⃣ Total XR views = total session count
     const totalXRViews = sessions.length;
@@ -170,7 +170,7 @@ export const getDashboard = async (req, res) => {
 
     return res.status(200).json({
       activeUsers,
-      avgDuration,
+      averageSessions,
       totalXRViews,
       totalInteractions,
       chartData,

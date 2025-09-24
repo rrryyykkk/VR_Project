@@ -5,8 +5,6 @@ import { adminLogin, adminLogout, userLogin, userLogout } from "../api/auth";
 export type Admin = {
   id: string;
   email: string;
-  userName: string;
-  password: string;
   fullName: string;
   imgProfile: string;
   createdAt: Date;
@@ -17,12 +15,11 @@ type LoginCredentials = { email: string; password: string };
 type AuthState = {
   user: User | null;
   admin: Admin | null;
-  role: "admin" | "user" | null;
   loading: boolean;
   error: string | null;
 
   setAdmin: (admin: Admin) => void;
-  setUser: (user: User) => void;
+  setUser: (user: User | null) => void;
   clearAuth: () => void;
 
   loginAdmin: (credentials: LoginCredentials) => Promise<boolean>;
@@ -37,21 +34,20 @@ const getErrorMessage = (err: unknown, fallback: string) =>
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   admin: null,
-  role: null,
   loading: false,
   error: null,
 
-  setAdmin: (admin: Admin) => set({ admin, role: "admin" }),
-  setUser: (user: User) => set({ user, role: "user" }),
+  setAdmin: (admin: Admin) => set({ admin }),
+  setUser: (user: User | null) => set({ user }),
   clearAuth: () =>
-    set({ user: null, admin: null, role: null, error: null, loading: false }),
+    set({ user: null, admin: null, error: null, loading: false }),
 
   loginAdmin: async (credentials) => {
     set({ loading: true, error: null });
     try {
       const res = await adminLogin(credentials);
       if (!res.data) throw new Error("Email atau password salah");
-      set({ admin: res.data, role: "admin", loading: false });
+      set({ admin: res.data, loading: false });
       return true;
     } catch (err: unknown) {
       set({ error: getErrorMessage(err, "Admin login gagal"), loading: false });
@@ -65,7 +61,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch {
       set({ error: "Admin logout gagal" });
     } finally {
-      set({ admin: null, role: null });
+      set({ admin: null });
     }
   },
 
@@ -74,7 +70,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const res = await userLogin(credentials);
       if (!res.data) throw new Error("Email atau password salah");
-      set({ user: res.data, role: "user", loading: false });
+      set({ user: res.data, loading: false });
       return true;
     } catch (err: unknown) {
       set({ error: getErrorMessage(err, "User login gagal"), loading: false });
@@ -88,7 +84,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch {
       set({ error: "User logout gagal" });
     } finally {
-      set({ user: null, role: null });
+      set({ user: null });
     }
   },
 }));

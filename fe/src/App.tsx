@@ -27,6 +27,7 @@ import LoginAdmin from "./page/auth/LoginAdmin";
 import ProtectedRoute from "./middleware/ProtectedRoutes";
 // hooks
 import { useEffect } from "react";
+import NotFound from "./page/NotFound";
 
 const App = () => {
   useEffect(() => {
@@ -133,21 +134,31 @@ const App = () => {
         />
       </Route>
       {/* users */}
-      <Route element={<ProtectedRoute role="user" />}></Route>
+      <Route element={<ProtectedRoute role="user" />}>
+        <Route
+          path="/profile"
+          element={
+            <UsersLayout>
+              <ProfilePageUser />
+            </UsersLayout>
+          }
+        />
+        <Route
+          path="/users/history"
+          element={
+            <UsersLayout>
+              <HistoryPageUsers />
+            </UsersLayout>
+          }
+        />
+      </Route>
+      {/* Not Found */}
       <Route
-        path="/profile"
+        path="*"
         element={
-          <UsersLayout>
-            <ProfilePageUser />
-          </UsersLayout>
-        }
-      />
-      <Route
-        path="/users/history"
-        element={
-          <UsersLayout>
-            <HistoryPageUsers />
-          </UsersLayout>
+          <LandingPage>
+            <NotFound />
+          </LandingPage>
         }
       />
     </Routes>

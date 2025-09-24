@@ -13,17 +13,17 @@ const router = express.Router();
 router.get(
   "/getMeAdmin",
   rateLimiter,
-  authMiddleware,
+  authMiddleware("admin"),
   adminMiddleware,
   getMeAdmin
 );
 router.put(
   "/updateAdmin",
   rateLimiter,
-  authMiddleware,
+  authMiddleware("admin"),
   adminMiddleware,
   upload.single("imgProfile"),
   editProfileAdmin
 );
-router.get("/dashbord", authMiddleware, adminMiddleware, getDashboard);
+router.get("/dashbord", authMiddleware("admin"), adminMiddleware, getDashboard);
 export default router;

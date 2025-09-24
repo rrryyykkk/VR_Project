@@ -15,6 +15,7 @@ export interface UserVR extends User {
   // status login & VR
   isLogin?: boolean; // true kalau sudah login ke sistem
   isActive?: boolean; // true kalau sedang aktif VR
+  isRecord?: boolean;
   currentSessionId?: string;
   currentRoom?: string;
   device?: string;

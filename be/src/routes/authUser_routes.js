@@ -7,7 +7,7 @@ import { getMeUser } from "../controllers/user_controllers.js";
 const router = express.Router();
 
 router.post("/login", rateLimiter, loginUser);
-router.post("/logout", rateLimiter, authMiddleware, logoutUser);
-router.get("/getMeUser", authMiddleware, getMeUser);
+router.post("/logout", rateLimiter, authMiddleware("user"), logoutUser);
+router.get("/getMeUser", authMiddleware("user"), getMeUser);
 
 export default router;

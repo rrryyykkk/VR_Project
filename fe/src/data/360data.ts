@@ -1,4 +1,4 @@
-import type { HotspotData } from "../type/VRdata";
+import type { HotspotData, SceneTask } from "../type/VRdata";
 
 export interface Data {
   id: string;
@@ -37,7 +37,7 @@ export const dataCilacap: Data[] = [
     id: "1",
     name: "Gerbang Utama PPSLU",
     locationId: "cilacap",
-    image: "/VR/luar/1_GerbangUtamaPPSLU.jpg",
+    image: "/VRWebp/luar/1_GerbangUtamaPPSLU.webp",
     hotspots: [
       {
         targetId: "2",
@@ -52,7 +52,7 @@ export const dataCilacap: Data[] = [
     id: "2",
     name: "Jalur Barat Luar PPSLU",
     locationId: "cilacap",
-    image: "/VR/luar/2_DenahLuarJalurBaratPPSLU.jpg",
+    image: "/VRWebp/luar/2_DenahLuarJalurBaratPPSLU.webp",
     hotspots: [
       {
         targetId: "1",
@@ -81,7 +81,7 @@ export const dataCilacap: Data[] = [
     id: "3",
     name: "Jalur Selatan Luar PPSLU",
     locationId: "cilacap",
-    image: "/VR/luar/3_DenahLuarJalurSelatanWisma.jpg",
+    image: "/VRWebp/luar/3_DenahLuarJalurSelatanWisma.webp",
     hotspots: [
       {
         targetId: "2",
@@ -111,7 +111,7 @@ export const dataCilacap: Data[] = [
     name: "Jalur Selatan Luar PPSLU Cross (Section Jalur Selatan)",
     locationId: "cilacap",
     image:
-      "/VR/luar/4_DenahLuarJalurSelatanWisma(CrossSectionJalurSelatan).jpg",
+      "/VRWebp/luar/4_DenahLuarJalurSelatanWisma(CrossSectionJalurSelatan).webp",
     hotspots: [
       {
         targetId: "3",
@@ -140,7 +140,7 @@ export const dataCilacap: Data[] = [
     id: "5",
     name: "Jalur Selatan Luar PPSLU",
     locationId: "cilacap",
-    image: "/VR/luar/5_DenahLuarJalurSelatanWisma.jpg",
+    image: "/VRWebp/luar/5_DenahLuarJalurSelatanWisma.webp",
     hotspots: [
       {
         targetId: "4",
@@ -169,7 +169,7 @@ export const dataCilacap: Data[] = [
     id: "6",
     name: "Jalur Timur Wisma",
     locationId: "cilacap",
-    image: "/VR/luar/6_DenahLuarJalurTimurWisma.jpg",
+    image: "/VRWebp/luar/6_DenahLuarJalurTimurWisma.webp",
     hotspots: [
       {
         targetId: "5",
@@ -191,7 +191,7 @@ export const dataCilacap: Data[] = [
     id: "7",
     name: "Jalur Timur Wisma(Timur Taman) ",
     locationId: "cilacap",
-    image: "/VR/luar/7_DenahLuarJalurTimurWisma(TimurTaman).jpg",
+    image: "/VRWebp/luar/7_DenahLuarJalurTimurWisma(TimurTaman).webp",
     hotspots: [
       {
         targetId: "8",
@@ -220,7 +220,7 @@ export const dataCilacap: Data[] = [
     id: "8",
     name: "Jalur Utara Wisma(Taman)",
     locationId: "cilacap",
-    image: "/VR/luar/8_DenahLuarJalurUtaraWisma(Taman).jpg",
+    image: "/VRWebp/luar/8_DenahLuarJalurUtaraWisma(Taman).webp",
     hotspots: [
       {
         targetId: "7",
@@ -249,7 +249,7 @@ export const dataCilacap: Data[] = [
     id: "9",
     name: "Jalur Utara Wisma(Taman Parkir Motor)",
     locationId: "cilacap",
-    image: "/VR/luar/9_DenahLuarJalurUtaraWisma(TamanParkirMotor).jpg",
+    image: "/VRWebp/luar/9_DenahLuarJalurUtaraWisma(TamanParkirMotor).webp",
     hotspots: [
       {
         targetId: "8",
@@ -271,7 +271,7 @@ export const dataCilacap: Data[] = [
     id: "10",
     name: "Jalur Utara Wisma(Cross Section Jalur Utara)",
     locationId: "cilacap",
-    image: "/VR/luar/10.jpg",
+    image: "/VRWebp/luar/10.webp",
     hotspots: [
       {
         targetId: "9",
@@ -300,7 +300,7 @@ export const dataCilacap: Data[] = [
     id: "11",
     name: "Jalur Utara Wisma(Parkir Motor)",
     locationId: "cilacap",
-    image: "/VR/luar/11_DenahLuarJalurUtaraWisma(ParkirMotor).jpg",
+    image: "/VRWebp/luar/11_DenahLuarJalurUtaraWisma(ParkirMotor).webp",
     hotspots: [
       {
         targetId: "10",
@@ -329,7 +329,7 @@ export const dataCilacap: Data[] = [
     id: "12",
     name: "Jalur Utara Wisma",
     locationId: "cilacap",
-    image: "/VR/luar/12_DenahLuarJalurUtaraWisma.jpg",
+    image: "/VRWebp/luar/12_DenahLuarJalurUtaraWisma.webp",
     hotspots: [
       {
         targetId: "11",
@@ -351,7 +351,7 @@ export const dataCilacap: Data[] = [
     id: "13",
     name: "Jalur Utara PPSLU",
     locationId: "cilacap",
-    image: "/VR/luar/13_DenahLuarJalurUtaraPPSLU.jpg",
+    image: "/VRWebp/luar/13_DenahLuarJalurUtaraPPSLU.webp",
     hotspots: [
       {
         targetId: "12",
@@ -381,7 +381,7 @@ export const dataCilacap: Data[] = [
     id: "14",
     name: "Halaman Ruang Keterampilan",
     locationId: "cilacap",
-    image: "/VR/keterampilan/14_HalamanRuangKeterampilan.jpg",
+    image: "/VRWebp/keterampilan/14_HalamanRuangKeterampilan.webp",
     hotspots: [
       {
         targetId: "13",
@@ -403,7 +403,7 @@ export const dataCilacap: Data[] = [
     id: "15",
     name: "Depan Pintu Ruang Keterampilan",
     locationId: "cilacap",
-    image: "/VR/keterampilan/15_DepanPintuRuangKeterampilan.jpg",
+    image: "/VRWebp/keterampilan/15_DepanPintuRuangKeterampilan.webp",
     hotspots: [
       {
         targetId: "14",
@@ -425,7 +425,7 @@ export const dataCilacap: Data[] = [
     id: "16",
     name: "Ruang Keterampilan",
     locationId: "cilacap",
-    image: "/VR/keterampilan/16_RuangKeterampilan.jpg",
+    image: "/VRWebp/keterampilan/16_RuangKeterampilan.webp",
     hotspots: [
       {
         targetId: "15",
@@ -447,7 +447,7 @@ export const dataCilacap: Data[] = [
     id: "17",
     name: "Barat Ruang Keterampilan",
     locationId: "cilacap",
-    image: "/VR/keterampilan/17_BaratRuangKeterampilan.jpg",
+    image: "/VRWebp/keterampilan/17_BaratRuangKeterampilan.webp",
     hotspots: [
       {
         targetId: "18",
@@ -462,7 +462,7 @@ export const dataCilacap: Data[] = [
     id: "18",
     name: "Tenis Meja(Ruang Keterampilan)",
     locationId: "cilacap",
-    image: "/VR/keterampilan/18_TenisMeja(RuangKeterampilan).jpg",
+    image: "/VRWebp/keterampilan/18_TenisMeja(RuangKeterampilan).webp",
     hotspots: [
       {
         targetId: "16",
@@ -491,7 +491,7 @@ export const dataCilacap: Data[] = [
     id: "19",
     name: "Timur Ruang Keterampilan",
     locationId: "cilacap",
-    image: "/VR/keterampilan/19_TimurRuangKeterampilan.jpg",
+    image: "/VRWebp/keterampilan/19_TimurRuangKeterampilan.webp",
     hotspots: [
       {
         targetId: "18",
@@ -507,7 +507,7 @@ export const dataCilacap: Data[] = [
     id: "20",
     name: "Halaman Depan PPSLU",
     locationId: "cilacap",
-    image: "/VR/luar/20_HalamanDepanPPSLU.jpg",
+    image: "/VRWebp/luar/20_HalamanDepanPPSLU.webp",
     hotspots: [
       {
         targetId: "21",
@@ -523,7 +523,7 @@ export const dataCilacap: Data[] = [
     id: "21",
     name: "Depan Pintu Masuk Gedung Administrasi",
     locationId: "cilacap",
-    image: "/VR/administrasi/21_DepanPintuMasukGedungAdministrasi.jpg",
+    image: "/VRWebp/administrasi/21_DepanPintuMasukGedungAdministrasi.webp",
     hotspots: [
       {
         targetId: "2",
@@ -559,7 +559,7 @@ export const dataCilacap: Data[] = [
     id: "22",
     name: "Gedung Administrasi",
     locationId: "cilacap",
-    image: "/VR/administrasi/22_GedungAdministrasi.jpg",
+    image: "/VRWebp/administrasi/22_GedungAdministrasi.webp",
     hotspots: [
       {
         targetId: "21",
@@ -602,7 +602,7 @@ export const dataCilacap: Data[] = [
     id: "23",
     name: "Meja Resepsionis Administrasi",
     locationId: "cilacap",
-    image: "/VR/administrasi/23_MejaResepsionisAdministrasi.jpg",
+    image: "/VRWebp/administrasi/23_MejaResepsionisAdministrasi.webp",
     hotspots: [
       {
         targetId: "21",
@@ -631,7 +631,7 @@ export const dataCilacap: Data[] = [
     id: "24",
     name: "Ruang Tengah Administrasi",
     locationId: "cilacap",
-    image: "/VR/administrasi/24_RuangTengahAdministrasi.jpg",
+    image: "/VRWebp/administrasi/24_RuangTengahAdministrasi.webp",
     hotspots: [
       {
         targetId: "21",
@@ -667,7 +667,7 @@ export const dataCilacap: Data[] = [
     id: "25",
     name: "PintuSelatanRuangAdministrasi",
     locationId: "cilacap",
-    image: "/VR/administrasi/25_PintuSelatanRuangAdministrasi.jpg",
+    image: "/VRWebp/administrasi/25_PintuSelatanRuangAdministrasi.webp",
     hotspots: [
       {
         targetId: "24",
@@ -689,7 +689,7 @@ export const dataCilacap: Data[] = [
     id: "26",
     name: "Pintu Utara Ruang Administrasi",
     locationId: "cilacap",
-    image: "/VR/administrasi/26_PintuUtaraRuangAdministrasi.jpg",
+    image: "/VRWebp/administrasi/26_PintuUtaraRuangAdministrasi.webp",
     hotspots: [
       {
         targetId: "24",
@@ -712,7 +712,7 @@ export const dataCilacap: Data[] = [
     id: "27",
     name: "Pintu Barat Aula(selatan)",
     locationId: "cilacap",
-    image: "/VR/aula/27_PintuBaratAula(Selatan).jpg",
+    image: "/VRWebp/aula/27_PintuBaratAula(Selatan).webp",
     hotspots: [
       {
         targetId: "3",
@@ -748,7 +748,7 @@ export const dataCilacap: Data[] = [
     id: "28",
     name: "Pintu Barat Aula(utara)",
     locationId: "cilacap",
-    image: "/VR/aula/28_Aula.jpg",
+    image: "/VRWebp/aula/28_Aula.webp",
     hotspots: [
       {
         targetId: "11",
@@ -784,7 +784,7 @@ export const dataCilacap: Data[] = [
     id: "29",
     name: "Pintu Dalam Barat Aula(Utara",
     locationId: "cilacap",
-    image: "/VR/aula/29_PintuDalamBaratAula(Utara).jpg",
+    image: "/VRWebp/aula/29_PintuDalamBaratAula(Utara).webp",
     hotspots: [
       {
         targetId: "28",
@@ -813,7 +813,7 @@ export const dataCilacap: Data[] = [
     id: "30",
     name: "Pintu Dalam Barat Aula(Selatan)",
     locationId: "cilacap",
-    image: "/VR/aula/30_PintuDalamBaratAula(Selatan).jpg",
+    image: "/VRWebp/aula/30_PintuDalamBaratAula(Selatan).webp",
     hotspots: [
       {
         targetId: "27",
@@ -842,7 +842,7 @@ export const dataCilacap: Data[] = [
     id: "31",
     name: "Aula(Selatan)",
     locationId: "cilacap",
-    image: "/VR/aula/31_Aula(Selatan).jpg",
+    image: "/VRWebp/aula/31_Aula(Selatan).webp",
     hotspots: [
       {
         targetId: "32",
@@ -878,7 +878,7 @@ export const dataCilacap: Data[] = [
     id: "32",
     name: "Aula(Center)",
     locationId: "cilacap",
-    image: "/VR/aula/32_Aula(Center).jpg",
+    image: "/VRWebp/aula/32_Aula(Center).webp",
     hotspots: [
       {
         targetId: "31",
@@ -928,7 +928,7 @@ export const dataCilacap: Data[] = [
     id: "33",
     name: "Aula(Utara)",
     locationId: "cilacap",
-    image: "/VR/aula/33_Aula(Utara).jpg",
+    image: "/VRWebp/aula/33_Aula(Utara).webp",
     hotspots: [
       {
         targetId: "29",
@@ -978,7 +978,7 @@ export const dataCilacap: Data[] = [
     id: "34",
     name: "Bangku Aula",
     locationId: "cilacap",
-    image: "/VR/aula/34_BangkuAula.jpg",
+    image: "/VRWebp/aula/34_BangkuAula.webp",
     hotspots: [
       {
         targetId: "33",
@@ -993,7 +993,7 @@ export const dataCilacap: Data[] = [
     id: "35",
     name: "Papan Tulis Aula",
     locationId: "cilacap",
-    image: "/VR/aula/35_PapanTulisAula.jpg",
+    image: "/VRWebp/aula/35_PapanTulisAula.webp",
     hotspots: [
       {
         targetId: "33",
@@ -1008,7 +1008,7 @@ export const dataCilacap: Data[] = [
     id: "36",
     name: "Mimbar Aula",
     locationId: "cilacap",
-    image: "/VR/aula/36_MimbarAula.jpg",
+    image: "/VRWebp/aula/36_MimbarAula.webp",
     hotspots: [
       {
         targetId: "33",
@@ -1023,7 +1023,7 @@ export const dataCilacap: Data[] = [
     id: "37",
     name: "Pintu Toilet Aula",
     locationId: "cilacap",
-    image: "/VR/aula/37_PintuToiletAula.jpg",
+    image: "/VRWebp/aula/37_PintuToiletAula.webp",
     hotspots: [
       {
         targetId: "30",
@@ -1059,7 +1059,7 @@ export const dataCilacap: Data[] = [
     id: "38",
     name: "Toilet Dalam Aula",
     locationId: "cilacap",
-    image: "/VR/aula/38_ToiletDalamAula.jpg",
+    image: "/VRWebp/aula/38_ToiletDalamAula.webp",
     hotspots: [
       {
         targetId: "37",
@@ -1074,7 +1074,7 @@ export const dataCilacap: Data[] = [
     id: "39",
     name: "Pintu Dalam Timur Aula(Utara)",
     locationId: "cilacap",
-    image: "/VR/aula/39_PintuDalamTimurAula(Utara).jpg",
+    image: "/VRWebp/aula/39_PintuDalamTimurAula(Utara).webp",
     hotspots: [
       {
         targetId: "33",
@@ -1103,7 +1103,7 @@ export const dataCilacap: Data[] = [
     id: "40",
     name: "Pintu Dalam Timur Aula(Selatan)",
     locationId: "cilacap",
-    image: "/VR/aula/40_PintuDalamTimurAula(Selatan).jpg",
+    image: "/VRWebp/aula/40_PintuDalamTimurAula(Selatan).webp",
     hotspots: [
       {
         targetId: "31",
@@ -1125,7 +1125,7 @@ export const dataCilacap: Data[] = [
     id: "41",
     name: "Pintu Luar Timur Aula(Utara)",
     locationId: "cilacap",
-    image: "/VR/aula/41_PintuLuarTimurAula(Utara).jpg",
+    image: "/VRWebp/aula/41_PintuLuarTimurAula(Utara).webp",
     hotspots: [
       {
         targetId: "33",
@@ -1154,7 +1154,7 @@ export const dataCilacap: Data[] = [
     id: "42",
     name: "Pintu Luar Timur Aula(Selatan)",
     locationId: "cilacap",
-    image: "/VR/aula/42_PintuLuarTimurAula(Selatan).jpg",
+    image: "/VRWebp/aula/42_PintuLuarTimurAula(Selatan).webp",
     hotspots: [
       {
         targetId: "31",
@@ -1183,7 +1183,7 @@ export const dataCilacap: Data[] = [
     id: "43",
     name: "Jalur Timur Aula(Utara)",
     locationId: "cilacap",
-    image: "/VR/aula/43_JalurTimurAula(Utara).jpg",
+    image: "/VRWebp/aula/43_JalurTimurAula(Utara).webp",
     hotspots: [
       {
         targetId: "10",
@@ -1219,7 +1219,7 @@ export const dataCilacap: Data[] = [
     id: "44",
     name: "Jalur Timur Aula(Selatan)",
     locationId: "cilacap",
-    image: "/VR/aula/44_JalurTimurAula(Selatan).jpg",
+    image: "/VRWebp/aula/44_JalurTimurAula(Selatan).webp",
     hotspots: [
       {
         targetId: "4",
@@ -1256,7 +1256,7 @@ export const dataCilacap: Data[] = [
     id: "45",
     name: "West Entrance Taman Dalam",
     locationId: "cilacap",
-    image: "/VR/taman/45_WestEntranceTamanDalam.jpg",
+    image: "/VRWebp/taman/45_WestEntranceTamanDalam.webp",
     hotspots: [
       {
         targetId: "42",
@@ -1292,7 +1292,7 @@ export const dataCilacap: Data[] = [
     id: "46",
     name: "West Junction Taman Dalam",
     locationId: "cilacap",
-    image: "/VR/taman/46_WestJunctionTamanDalam.jpg",
+    image: "/VRWebp/taman/46_WestJunctionTamanDalam.webp",
     hotspots: [
       {
         targetId: "45",
@@ -1321,7 +1321,7 @@ export const dataCilacap: Data[] = [
     id: "47",
     name: "Southwest Junction Taman Dalam",
     locationId: "cilacap",
-    image: "/VR/taman/47_SouthwestJunctionTamanDalam.jpg",
+    image: "/VRWebp/taman/47_SouthwestJunctionTamanDalam.webp",
     hotspots: [
       {
         targetId: "5",
@@ -1350,7 +1350,7 @@ export const dataCilacap: Data[] = [
     id: "48",
     name: "Northwest Junction Taman Dalam",
     locationId: "cilacap",
-    image: "/VR/taman/48_NorthwestJunctionTamanDalam.jpg",
+    image: "/VRWebp/taman/48_NorthwestJunctionTamanDalam.webp",
     hotspots: [
       {
         targetId: "9",
@@ -1379,7 +1379,7 @@ export const dataCilacap: Data[] = [
     id: "49",
     name: "Center Point Tama nDalam",
     locationId: "cilacap",
-    image: "/VR/taman/49_CenterPointTamanDalam.jpg",
+    image: "/VRWebp/taman/49_CenterPointTamanDalam.webp",
     hotspots: [
       {
         targetId: "47",
@@ -1408,7 +1408,7 @@ export const dataCilacap: Data[] = [
     id: "50",
     name: "Taman Dalam PPSLU Dewanata",
     locationId: "cilacap",
-    image: "/VR/taman/50_TamanDalamPPSLUDewanata.jpg",
+    image: "/VRWebp/taman/50_TamanDalamPPSLUDewanata.webp",
     hotspots: [
       {
         targetId: "49",
@@ -1437,7 +1437,7 @@ export const dataCilacap: Data[] = [
     id: "51",
     name: "Norteast Junction Taman Dalam",
     locationId: "cilacap",
-    image: "/VR/taman/51_NortheastJunctionTamanDalam.jpg",
+    image: "/VRWebp/taman/51_NortheastJunctionTamanDalam.webp",
     hotspots: [
       {
         targetId: "8",
@@ -1466,7 +1466,7 @@ export const dataCilacap: Data[] = [
     id: "52",
     name: "Southeast Junction Taman Dalam",
     locationId: "cilacap",
-    image: "/VR/taman/52_SoutheastJunctionTamanDalam.jpg",
+    image: "/VRWebp/taman/52_SoutheastJunctionTamanDalam.webp",
     hotspots: [
       {
         targetId: "50",
@@ -1488,7 +1488,7 @@ export const dataCilacap: Data[] = [
     id: "53",
     name: "East Entrance Taman Dalam",
     locationId: "cilacap",
-    image: "/VR/taman/53_EastEntranceTamanDalam.jpg",
+    image: "/VRWebp/taman/53_EastEntranceTamanDalam.webp",
     hotspots: [
       {
         targetId: "7",
@@ -1512,6 +1512,41 @@ export const dataCilacap: Data[] = [
         direction: [1, 1, 1],
       },
     ],
+  },
+];
+
+export const availableTask: SceneTask[] = [
+  {
+    taskId: "task-01",
+    taskName: "Bangku Aula",
+    description: "Interaksi dengan bangku aula( duduk di bangku Aula )",
+    sceneId: "34",
+    locationId: "cilacap",
+    type: "interaction",
+  },
+  {
+    taskId: "task-02",
+    taskName: "Papan Tulis",
+    description: "Interaksi dengan Papan Tulis( Berdiri di depan Papan Tulis )",
+    sceneId: "35",
+    locationId: "cilacap",
+    type: "interaction",
+  },
+  {
+    taskId: "task-03",
+    taskName: "Mimbar Aula",
+    description: "Interaksi dengan Mimbar Aula( Berdiri di Mimbar Aula)",
+    sceneId: "36",
+    locationId: "cilacap",
+    type: "interaction",
+  },
+  {
+    taskId: "task-04",
+    taskName: "Toilet Dalam Aula",
+    description: "Masuk ke Toilet Dalam Aula( Berdiri di Toilet Dalam Aula )",
+    sceneId: "38",
+    locationId: "cilacap",
+    type: "navigation",
   },
 ];
 

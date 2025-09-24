@@ -1,30 +1,32 @@
-// src/routes/ProtectedRoute.tsx
 import { Navigate, Outlet } from "react-router";
 import { useAuthStore } from "../app/store/AuthStore";
+import { motion } from "framer-motion";
 
 type ProtectedRouteProps = {
   role?: "admin" | "user";
 };
 
 export default function ProtectedRoute({ role }: ProtectedRouteProps) {
-  const { user, admin, role: currentRole, loading } = useAuthStore();
-  console.log("currentRole", currentRole);
-  console.log("user", user);
-  console.log("admin", admin);
+  const { user, admin, loading } = useAuthStore();
 
-  const currentUser = currentRole === "admin" ? admin : user;
-
-  if (loading) return <div>Loading...</div>;
-
-  if (role && !currentUser) {
+  // Loading overlay
+  if (loading) {
     return (
-      <Navigate to={role === "admin" ? "/login-admin" : "/login"} replace />
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/70 backdrop-blur-sm">
+        <motion.div
+          className="w-16 h-16 border-4 border-fuchsia-500 border-t-transparent rounded-full"
+          animate={{ rotate: 360 }}
+          transition={{ repeat: Infinity, duration: 1 }}
+        ></motion.div>
+        <div className="mt-4 text-fuchsia-600 font-semibold text-lg">
+          Memuat halaman...
+        </div>
+      </div>
     );
   }
 
-  if (role && currentRole !== role) {
-    return <Navigate to="/" replace />;
-  }
+  if (role === "admin" && !admin) return <Navigate to="/login-admin" replace />;
+  if (role === "user" && !user) return <Navigate to="/login" replace />;
 
   return <Outlet />;
 }

@@ -28,12 +28,12 @@ export default function Hotspot({ data, onClick }: HotspotProps) {
       <Html center>
         <motion.button
           onClick={handleClick}
-          className="bg-white rounded-full p-3 shadow-md cursor-pointer"
+          className="bg-white rounded-full p-3 shadow-md cursor-pointer transform-gpu"
           title={data.name}
-          initial={{ opacity: 0, scale: 0.5 }}
+          initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.5, duration: 0.4, ease: "easeOut" }}
-          whileHover={{ scale: 1.2 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+          whileHover={{ scale: 1.1 }}
         >
           {IconComp && (
             <IconComp

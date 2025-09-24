@@ -1,7 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { comparePW, hashPW } from "../utils/hashPW.js";
 import { uploadToCloudinary } from "../utils/cloudinary.js";
-import { is } from "zod/v4/locales";
 const prisma = new PrismaClient();
 
 export const getMeAdmin = async (req, res) => {
@@ -17,10 +16,12 @@ export const getMeAdmin = async (req, res) => {
         createdAt: true,
       },
     });
+    console.log("admin", admin);
 
     if (!admin) return res.status(404).json({ message: "Admin not found" });
     return res.status(200).json(admin);
   } catch (error) {
+    console.log("error getMeAdmin", error?.message);
     res.status(500).json({ message: "Internal server error" });
   }
 };

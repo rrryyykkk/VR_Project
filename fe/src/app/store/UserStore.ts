@@ -19,14 +19,22 @@ import type { User, UserPayload } from "../../type/user";
 
 // ✅ Get current user profile
 export const useUserProfile = (
-  options?: Partial<UseQueryOptions<User, Error>>
+  options?: Partial<UseQueryOptions<User | null, Error>>
 ) => {
-  return useQuery<User, Error>({
+  const setUser = useAuthStore((state) => state.setUser);
+  return useQuery<User | null, Error>({
     queryKey: ["userProfile"],
     queryFn: async () => {
-      const res = await getMeUser();
-      return res.data as User;
+      try {
+        const res = await getMeUser();
+        setUser(res);
+        return res;
+      } catch {
+        setUser(null);
+        return null;
+      }
     },
+    retry: false,
     ...options,
   });
 };
@@ -56,6 +64,7 @@ export const useAllUsers = () => {
       const res = await getAllUserByAdmin();
       return res.data as User[];
     },
+    refetchOnWindowFocus: false,
   });
 };
 

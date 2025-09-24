@@ -21,6 +21,8 @@ const NavbarLP = () => {
   const navigate = useNavigate();
 
   const { data: user, isLoading, isError } = useUserProfile();
+
+  console.log("user:", user, "isLoading:", isLoading, "isError:", isError);
   const { logoutUser } = useAuthStore();
 
   useEffect(() => {
@@ -70,16 +72,16 @@ const NavbarLP = () => {
             {isLoading ? null : isError || !user ? (
               <a
                 href="/login"
-                className="relative inline-block rounded-full px-4 py-2 font-bold text-white overflow-hidden group"
+                className="relative inline-block rounded-full px-4 py-2 font-bold text-white overflow-hidden group cursor-pointer"
               >
                 <span className="absolute inset-0 bg-gradient-to-r from-fuchsia-600 to-pink-500 rounded-full transition-transform duration-500 group-hover:scale-110 group-hover:blur-sm"></span>
                 <span className="relative z-10">Login</span>
               </a>
             ) : (
-              <div className="relative">
+              <div className="relative ">
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="flex items-center"
+                  className="flex items-center cursor-pointer"
                 >
                   {user.imgProfile ? (
                     <img
@@ -101,7 +103,7 @@ const NavbarLP = () => {
                       exit={{ opacity: 0, scale: 0.9, y: -10 }}
                       transition={{ duration: 0.2 }}
                       className="absolute right-0 mt-3 w-60 rounded-2xl shadow-xl border border-white/20 
-                                 bg-gradient-to-br from-white/70 to-white/30 backdrop-blur-xl overflow-hidden z-50"
+                                 bg-gradient-to-br from-white/70 to-white/30 backdrop-blur-xl overflow-hidden z-50 "
                     >
                       <div className="px-4 py-3 border-b border-white/20">
                         <div className="flex items-center space-x-3">
@@ -133,7 +135,7 @@ const NavbarLP = () => {
                       </a>
                       <button
                         onClick={logOutUser}
-                        className="w-full text-left px-4 py-3 text-gray-800 font-medium hover:bg-fuchsia-100 transition"
+                        className="w-full text-left px-4 py-3 text-gray-800 font-medium hover:bg-fuchsia-100 transition cursor-pointer"
                       >
                         Logout
                       </button>

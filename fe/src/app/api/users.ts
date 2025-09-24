@@ -3,12 +3,12 @@ import { api } from "./Axios";
 
 export const getMeUser = async () => {
   const res = await api.get("/auth/user/getMeUser");
-  return res;
+  return res.data;
 };
 
 export const editProfileUser = async (data: FormData) => {
   const res = await api.put("/user/update", data);
-  return res;
+  return res.data;
 };
 
 // CRUD User by Admin
@@ -20,7 +20,6 @@ export const getAllUserByAdmin = async () => {
 
 export const createUserAdmin = async (data: UserPayload) => {
   const res = await api.post("/user/create", data);
-  console.log(data);
   return res;
 };
 

@@ -15,21 +15,15 @@ export const useAdminProfile = (
   options?: Omit<UseQueryOptions<Admin, Error>, "queryKey" | "queryFn">
 ) => {
   const setAdmin = useAuthStore((state) => state.setAdmin);
-
   return useQuery<Admin, Error>({
     queryKey: ["adminProfile"],
     queryFn: async () => {
       const res = await getMeAdmin();
+      setAdmin(res.data);
       return res.data;
     },
-    onSuccess: (data: Admin) => {
-      setAdmin(data); // update Zustand
-    },
-    onError: (err: Error) => {
-      console.error("Fetch admin failed:", err.message);
-    },
     ...options,
-  } as UseQueryOptions<Admin, Error>);
+  });
 };
 
 export const useGetDashboard = () => {

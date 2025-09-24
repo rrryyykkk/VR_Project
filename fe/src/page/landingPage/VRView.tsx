@@ -18,6 +18,7 @@ import VRRecorder, {
 import { xrStore } from "../../hooks/xrStore";
 import { XR } from "@react-three/xr";
 import { useUserProfile } from "../../app/store/UserStore";
+import { useIsActive } from "../../app/store/ActivityStore";
 
 // ✅ helper untuk build target object
 function buildInteractionTarget(
@@ -35,6 +36,7 @@ export default function VRView() {
   const { locationId } = useParams();
   const { state } = useLocation();
   const views: SceneData[] = state?.views || [];
+  const { mutate: setActive } = useIsActive();
 
   // ambil status loading (progress dari drei)
   const { progress } = useProgress();
@@ -93,6 +95,23 @@ export default function VRView() {
     }, 100);
     return () => clearInterval(interval);
   }, [logMovement]);
+
+  // heartbeat
+  useEffect(() => {
+    // pas masuk ke VRView → set active true
+    setActive(true);
+
+    // heartbeat tiap 5 detik
+    const interval = setInterval(() => {
+      setActive(true);
+    }, 5000);
+
+    return () => {
+      clearInterval(interval);
+      // pas keluar dari VRView → set active false
+      setActive(false);
+    };
+  }, [setActive]);
 
   if (!currentScene) {
     return (

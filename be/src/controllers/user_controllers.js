@@ -14,6 +14,7 @@ const prisma = new PrismaClient();
 export const getAllUserByAdmin = async (req, res) => {
   try {
     const adminId = req.user.id;
+
     const users = await prisma.user.findMany({
       where: { adminId },
       select: {
@@ -30,6 +31,7 @@ export const getAllUserByAdmin = async (req, res) => {
         medicalNote: true,
         isLogin: true,
         isActive: true,
+        isRecord: true,
       },
     });
     res.status(200).json(users);
@@ -302,6 +304,7 @@ export const updateUser = async (req, res) => {
 export const getMeUser = async (req, res) => {
   try {
     const userId = req.user?.id;
+    console.log("userMe", userId);  
     if (!userId) return res.status(404).json({ message: "Unauthorized" });
 
     const user = await prisma.user.findUnique({
@@ -313,6 +316,8 @@ export const getMeUser = async (req, res) => {
         age: true,
         gender: true,
         imgProfile: true,
+        isActive: true,
+        isRecord: true,
       },
     });
     if (!user) return res.status(404).json({ message: "User not found" });

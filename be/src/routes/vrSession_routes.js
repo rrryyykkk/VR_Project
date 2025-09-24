@@ -10,10 +10,15 @@ import { adminMiddleware, authMiddleware } from "../middlewares/auth.js";
 
 const router = express.Router();
 
-router.post("/", authMiddleware, createVRSession); // FE -> BE
-router.get("/", authMiddleware, adminMiddleware, getAllVRSession); // admin session global
-router.get("/user/:userId", authMiddleware, getSessionByUser); // user session
-router.get("/:sessionId/stats", authMiddleware, getOneVRSession); // stats per-sesion
-router.delete("/:sessionId", authMiddleware, adminMiddleware, deleteVRSession); // admin delete ("id")
+router.post("/", authMiddleware("user"), createVRSession); // FE -> BE
+router.get("/", authMiddleware("admin"), adminMiddleware, getAllVRSession); // admin session global
+router.get("/user/:userId", authMiddleware("user"), getSessionByUser); // user session
+router.get("/:sessionId/stats", authMiddleware("user"), getOneVRSession); // stats per-sesion
+router.delete(
+  "/:sessionId",
+  authMiddleware("admin"),
+  adminMiddleware,
+  deleteVRSession
+); // admin delete ("id")
 
 export default router;

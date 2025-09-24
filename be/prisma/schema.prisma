@@ -51,6 +51,12 @@ model User {
   medicalNote String?
   isLogin    Boolean @default(false)
   isActive   Boolean @default(false)
+  isRecord   Boolean @default(false)
+
+  //untuk heartBreaking
+  lastActive DateTime?
+  lastRecord DateTime?
+
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt 
 
@@ -111,6 +117,8 @@ model Task {
   id String @id @default(cuid())
   taskId String
   taskName String
+  description String
+  sceneId String
   status Status
   timeSpent Int
 

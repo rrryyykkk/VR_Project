@@ -11,10 +11,10 @@ import { upload } from "../utils/multer.js";
 
 const router = express.Router();
 
-router.get("/", authMiddleware, adminMiddleware, getAllUserByAdmin);
-router.post("/create", authMiddleware, adminMiddleware, createUserAdmin);
-router.put("/edit/:id", authMiddleware, adminMiddleware, editUserAdmin);
-router.delete("/:id", authMiddleware, adminMiddleware, deleteUserAdmin);
-router.put("/update", authMiddleware, upload.single("imgProfile"), updateUser);
+router.get("/", authMiddleware("admin"), adminMiddleware, getAllUserByAdmin);
+router.post("/create", authMiddleware("admin"), adminMiddleware, createUserAdmin);
+router.put("/edit/:id", authMiddleware("admin"), adminMiddleware, editUserAdmin);
+router.delete("/:id", authMiddleware("admin"), adminMiddleware, deleteUserAdmin);
+router.put("/update", authMiddleware("user"), upload.single("imgProfile"), updateUser);
 
 export default router;

@@ -96,7 +96,7 @@ export const loginAdmin = async (req, res) => {
 
     // Kirim token sebagai httpOnly cookie
     res
-      .cookie("token", token, {
+      .cookie("tokenAdmin", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
@@ -116,7 +116,7 @@ export const logoutAdmin = async (req, res) => {
   try {
     // Hapus cookie token
     res
-      .cookie("token", "", {
+      .cookie("tokenAdmin", "", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
@@ -132,7 +132,6 @@ export const logoutAdmin = async (req, res) => {
 };
 
 // user
-
 // ----------------- LOGIN USER -----------------
 export const loginUser = async (req, res) => {
   try {
@@ -163,7 +162,7 @@ export const loginUser = async (req, res) => {
     });
 
     // kirim token sebagai httpOnly cookie
-    res.cookie("token", token, {
+    res.cookie("tokenUser", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
@@ -188,7 +187,7 @@ export const logoutUser = async (req, res) => {
     });
 
     // hapus cookie
-    res.clearCookie("token", {
+    res.clearCookie("tokenUser", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "Strict",

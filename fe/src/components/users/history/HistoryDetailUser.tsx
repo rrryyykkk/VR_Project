@@ -8,23 +8,17 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  Brush,
 } from "recharts";
 import { motion } from "framer-motion";
 import { useVRSessionbySessionId } from "../../../app/store/VrSessionStore";
+import dayjs from "dayjs";
 
 interface Props {
   sessionId: string;
   onClose: () => void;
 }
 
-// 🔹 Normalisasi derajat (0–360)
-function normalizeDegree(angle: number): number {
-  let deg = angle % 360;
-  if (deg < 0) deg += 360;
-  return deg;
-}
-
-// 🔹 Helper untuk format durasi
 function formatDuration(seconds: number): string {
   if (!seconds || seconds < 0) return "-";
   if (seconds < 60) return `${seconds} detik`;
@@ -44,55 +38,42 @@ export default function HistoryDetailUser({ sessionId, onClose }: Props) {
   } = useVRSessionbySessionId(sessionId);
   console.log("sessionDetail", session);
 
-  // --- UI Loading ---
+  // --- Loading UI ---
   if (isLoading)
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="flex items-center justify-center h-64"
-      >
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-          className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full"
-        />
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full" />
         <p className="ml-4 text-blue-600 font-semibold">
           Memuat detail sesi...
         </p>
-      </motion.div>
+      </div>
     );
 
-  // --- UI Error ---
+  // --- Error UI ---
   if (isError)
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="p-6 bg-red-100 border border-red-300 rounded-lg text-center space-y-3"
-      >
+      <div className="p-6 bg-red-100 border border-red-300 rounded-lg text-center space-y-3">
         <p className="text-red-600 font-semibold">❌ Gagal memuat data</p>
         <p className="text-red-500 text-sm">
           {error?.message || "Terjadi kesalahan"}
         </p>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+        <button
           className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg"
           onClick={onClose}
         >
           🔙 Kembali
-        </motion.button>
-      </motion.div>
+        </button>
+      </div>
     );
 
   if (!session) return <p>Data tidak ditemukan</p>;
 
-  // 🔹 Siapkan data grafik dari BE (rotX / rotY)
-  const rotationData = (session.cameraRotations || []).map((rot) => ({
-    timestamp: new Date(rot.timeStamp).toLocaleTimeString(),
-    upDown: normalizeDegree(rot.rotX ?? 0),
-    leftRight: normalizeDegree(rot.rotY ?? 0),
+  // 🔹 Format data rotasi kamera
+  const formatted = (session.cameraRotations || []).map((rot) => ({
+    time: dayjs(rot.timeStamp).format("HH:mm:ss"),
+    fullTime: dayjs(rot.timeStamp).format("YYYY-MM-DD HH:mm:ss"),
+    x: Number((rot.rotX ?? 0).toFixed(2)),
+    y: Number((rot.rotY ?? 0).toFixed(2)),
   }));
 
   return (
@@ -123,9 +104,9 @@ export default function HistoryDetailUser({ sessionId, onClose }: Props) {
         </p>
       </div>
 
-      {/* Hotspots */}
+      {/* Hotspots / Interactions */}
       <section className="bg-base-100 p-4 rounded-xl shadow">
-        <h3 className="text-xl font-semibold mb-2">Hotspot yang Dikunjungi</h3>
+        <h3 className="text-xl font-semibold mb-2">Interaksi</h3>
         {session.interactions?.length ? (
           <div className="overflow-x-auto">
             <table className="table table-zebra w-full">
@@ -138,14 +119,36 @@ export default function HistoryDetailUser({ sessionId, onClose }: Props) {
                 </tr>
               </thead>
               <tbody>
-                {session.interactions.map((h) => (
-                  <tr key={h.id}>
-                    <td>{new Date(h.timestamp).toLocaleTimeString()}</td>
-                    <td className="capitalize">{h.type}</td>
-                    <td>{h.targetName || h.targetId || "-"}</td>
-                    <td>{h.targetType || "-"}</td>
-                  </tr>
-                ))}
+                {session.interactions.map((h) => {
+                  if (h.type === "scene" || h.type === "hotspot") {
+                    return (
+                      <tr key={h.id}>
+                        <td>{new Date(h.timestamp).toLocaleTimeString()}</td>
+                        <td className="capitalize">{h.type}</td>
+                        <td>{h.targetName || h.targetId || "-"}</td>
+                        <td>{h.targetType || "-"}</td>
+                      </tr>
+                    );
+                  }
+
+                  if (h.type === "taskUpdate") {
+                    return (
+                      <tr key={h.id}>
+                        <td>{new Date(h.timestamp).toLocaleTimeString()}</td>
+                        <td className="capitalize">{h.type}</td>
+                        <td colSpan={2}>
+                          Update Tugas (
+                          {Array.isArray(h.targetTasks)
+                            ? h.targetTasks.length
+                            : 0}{" "}
+                          task)
+                        </td>
+                      </tr>
+                    );
+                  }
+
+                  return null;
+                })}
               </tbody>
             </table>
           </div>
@@ -184,32 +187,49 @@ export default function HistoryDetailUser({ sessionId, onClose }: Props) {
       )}
 
       {/* Chart Rotasi */}
-      {rotationData.length > 0 && (
+      {formatted.length > 0 && (
         <div>
           <h3 className="font-semibold text-lg mb-2">📊 Gerakan Kamera</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={rotationData}>
+          <ResponsiveContainer width="100%" height={350}>
+            <LineChart
+              data={formatted}
+              margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+            >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="timestamp" tick={{ fontSize: 12 }} />
-              <YAxis tick={{ fontSize: 12 }} />
+              <XAxis
+                dataKey="time"
+                tick={{ fontSize: 12 }}
+                interval="preserveStartEnd"
+              />
+              <YAxis />
               <Tooltip
+                labelFormatter={(label, payload) =>
+                  payload && payload.length > 0
+                    ? payload[0].payload.fullTime
+                    : label
+                }
                 formatter={(value) =>
-                  typeof value === "number" ? `${value.toFixed(1)}°` : value
+                  typeof value === "number" ? `${value}°` : value
                 }
               />
-              <Legend wrapperStyle={{ fontSize: "14px" }} />
+              <Legend />
               <Line
                 type="monotone"
-                dataKey="upDown"
+                dataKey="x"
                 stroke="#4A90E2"
-                name="Gerakan Atas–Bawah"
+                name="Rotasi X (Atas–Bawah)"
+                dot={false}
+                isAnimationActive={false}
               />
               <Line
                 type="monotone"
-                dataKey="leftRight"
+                dataKey="y"
                 stroke="#F5A623"
-                name="Gerakan Kiri–Kanan"
+                name="Rotasi Y (Kiri–Kanan)"
+                dot={false}
+                isAnimationActive={false}
               />
+              <Brush dataKey="time" height={25} stroke="#8884d8" />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -217,14 +237,12 @@ export default function HistoryDetailUser({ sessionId, onClose }: Props) {
 
       {/* Tombol kembali */}
       <div className="flex justify-end">
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+        <button
           className="btn btn-secondary px-4 py-2 rounded-lg bg-gray-900 hover:bg-gray-700 text-white"
           onClick={onClose}
         >
           🔙 Kembali
-        </motion.button>
+        </button>
       </div>
     </motion.div>
   );

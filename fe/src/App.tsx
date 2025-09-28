@@ -1,5 +1,4 @@
-import { Route, Routes } from "react-router";
-// public routes
+import { Route, Routes, useLocation } from "react-router";
 import Home from "./page/landingPage/Home";
 import About from "./page/landingPage/About";
 import Contact from "./page/landingPage/Contact";
@@ -20,7 +19,7 @@ import AnalyticById from "./page/admin/AnalyticById";
 import ProfilePage from "./page/admin/ProfileAdmin";
 import Analytic from "./page/admin/Analytic";
 import VRSessionAdmin from "./page/admin/VRSessionAdmin";
-// aut
+// auth
 import LoginUsers from "./page/auth/LoginUsers";
 import LoginAdmin from "./page/auth/LoginAdmin";
 // middleware
@@ -28,12 +27,24 @@ import ProtectedRoute from "./middleware/ProtectedRoutes";
 // hooks
 import { useEffect } from "react";
 import NotFound from "./page/NotFound";
+import { useIsActive } from "./app/store/ActivityStore";
 
 const App = () => {
+  const { pathname } = useLocation();
+  const { mutate: setActive } = useIsActive();
+
   useEffect(() => {
     const btn = document.getElementById("VRButton");
     if (btn) btn.remove(); // hapus tombol bawaan
   }, []);
+
+  // ✅ Global watcher → kalau bukan di /vr/:locationId maka paksa setActive(false)
+  useEffect(() => {
+    const isVRPage = /^\/vr\/\w+/.test(pathname);
+    if (!isVRPage) {
+      setActive(false);
+    }
+  }, [pathname, setActive]);
 
   return (
     <Routes>
@@ -79,9 +90,11 @@ const App = () => {
         }
       />
       <Route path="/vr/:locationId" element={<VRView />} />
+
       {/* auth */}
       <Route path="/login" element={<LoginUsers />} />
       <Route path="/login-admin" element={<LoginAdmin />} />
+
       {/* admin */}
       <Route element={<ProtectedRoute role="admin" />}>
         <Route
@@ -133,6 +146,7 @@ const App = () => {
           }
         />
       </Route>
+
       {/* users */}
       <Route element={<ProtectedRoute role="user" />}>
         <Route
@@ -152,6 +166,7 @@ const App = () => {
           }
         />
       </Route>
+
       {/* Not Found */}
       <Route
         path="*"

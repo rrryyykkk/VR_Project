@@ -1,3 +1,4 @@
+// NavbarUsers.tsx
 import { FaBars, FaBell, FaUserCircle } from "react-icons/fa";
 
 interface NavbarUsersProps {
@@ -6,7 +7,7 @@ interface NavbarUsersProps {
 
 const NavbarUsers = ({ setIsSidebarOpen }: NavbarUsersProps) => {
   return (
-    <nav className="bg-white shadow-md px-4 py-3 flex items-center justify-between border-b border-pink-100">
+    <nav className="bg-white shadow px-4 py-3 flex items-center justify-between border-b border-pink-100">
       {/* Burger menu */}
       <button
         onClick={() => setIsSidebarOpen(true)}
@@ -16,7 +17,7 @@ const NavbarUsers = ({ setIsSidebarOpen }: NavbarUsersProps) => {
       </button>
 
       {/* Title */}
-      <h1 className="font-semibold text-lg md:text-xl text-pink-700">
+      <h1 className="font-semibold text-lg md:text-xl text-pink-700 truncate">
         👋 Selamat Datang, User
       </h1>
 

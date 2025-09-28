@@ -304,7 +304,6 @@ export const updateUser = async (req, res) => {
 export const getMeUser = async (req, res) => {
   try {
     const userId = req.user?.id;
-    console.log("userMe", userId);  
     if (!userId) return res.status(404).json({ message: "Unauthorized" });
 
     const user = await prisma.user.findUnique({

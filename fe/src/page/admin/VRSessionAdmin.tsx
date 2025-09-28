@@ -1,18 +1,21 @@
-// src/components/VR/VRSessionAdmin.tsx
+// src/components/admin/VRSessionAdmin.tsx
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MdOutlineRefresh } from "react-icons/md";
 
 import type { UserVR } from "../../type/user";
+import type { VRTaskSession } from "../../type/VRdata";
 import { useAllUsers } from "../../app/store/UserStore";
 import TaskByAdmin from "../../components/admin/TaskByAdmin";
 import { useToast } from "../../hooks/ToastContext";
 
 const VRSessionAdmin = () => {
   const [selectedUser, setSelectedUser] = useState<UserVR | null>(null);
+  const [tasksByUser, setTasksByUser] = useState<
+    Record<string, VRTaskSession[]>
+  >({});
 
   const { addToast } = useToast();
-
   const {
     data: users = [],
     isLoading,
@@ -39,15 +42,22 @@ const VRSessionAdmin = () => {
 
   const closeModal = () => setSelectedUser(null);
 
-  // Loading UI
+  const handleAssign = (tasks: VRTaskSession[]) => {
+    if (!selectedUser) return;
+    setTasksByUser((prev) => ({
+      ...prev,
+      [selectedUser.id]: tasks,
+    }));
+    closeModal();
+    addToast(`Tasks berhasil diberikan ke ${selectedUser.fullName}`, "success");
+  };
+
   if (isLoading)
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-b-4 "></div>
       </div>
     );
-
-  // Error UI
   if (isError)
     return (
       <div className="flex justify-center items-center h-64">
@@ -62,7 +72,6 @@ const VRSessionAdmin = () => {
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
-      {/* Header + Refresh */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-800">
           Monitoring Sesi Pengguna
@@ -75,7 +84,6 @@ const VRSessionAdmin = () => {
         </button>
       </div>
 
-      {/* Table */}
       <div className="overflow-x-auto rounded-lg shadow">
         <table className="w-full table-auto border-collapse">
           <thead className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
@@ -139,7 +147,6 @@ const VRSessionAdmin = () => {
         </table>
       </div>
 
-      {/* Modal */}
       <AnimatePresence>
         {selectedUser && (
           <motion.div
@@ -155,7 +162,6 @@ const VRSessionAdmin = () => {
               transition={{ type: "spring", stiffness: 200, damping: 20 }}
               className="bg-white rounded-xl shadow-2xl max-w-4xl w-full overflow-hidden"
             >
-              {/* Header */}
               <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 text-white flex justify-between items-center">
                 <h2 className="text-xl font-bold">
                   Detail {selectedUser.fullName}
@@ -168,9 +174,7 @@ const VRSessionAdmin = () => {
                 </button>
               </div>
 
-              {/* Body */}
               <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* User Info */}
                 <div className="space-y-3 text-sm">
                   <p>
                     <strong>Email:</strong> {selectedUser.email}
@@ -220,15 +224,66 @@ const VRSessionAdmin = () => {
                   </p>
                 </div>
 
-                {/* Task Manager */}
                 <div className="bg-gray-50 p-4 rounded-lg border">
-                  <TaskByAdmin user={selectedUser} />
+                  <TaskByAdmin user={selectedUser} onAssign={handleAssign} />
                 </div>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {Object.keys(tasksByUser).length > 0 && (
+        <div className="mt-6">
+          <h3 className="text-lg font-semibold mb-2">Tasks Assigned</h3>
+          <div className="overflow-x-auto rounded-lg shadow">
+            <table className="w-full table-auto border-collapse">
+              <thead className="bg-gray-200 text-gray-700">
+                <tr>
+                  <th className="px-4 py-2">User</th>
+                  <th className="px-4 py-2">Task</th>
+                  <th className="px-4 py-2">Status</th>
+                  <th className="px-4 py-2">Timer</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 bg-white">
+                {Object.entries(tasksByUser).map(([userId, tasks]) =>
+                  tasks.map((task) => (
+                    <tr key={task.taskId + userId}>
+                      <td className="px-4 py-2">
+                        {users.find((u) => u.id === userId)?.fullName || "-"}
+                      </td>
+                      <td className="px-4 py-2">{task.taskName}</td>
+                      <td
+                        className={`px-4 py-2 font-semibold ${
+                          task.status === "inProgress"
+                            ? "text-blue-600"
+                            : task.status === "completed"
+                            ? "text-green-600"
+                            : task.status === "failed"
+                            ? "text-red-600"
+                            : "text-gray-500"
+                        }`}
+                      >
+                        {task.status}
+                      </td>
+                      <td className="px-4 py-2">
+                        {task.remaining
+                          ? `${Math.floor(task.remaining / 60)
+                              .toString()
+                              .padStart(2, "0")}:${(task.remaining % 60)
+                              .toString()
+                              .padStart(2, "0")}`
+                          : "No Limit"}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

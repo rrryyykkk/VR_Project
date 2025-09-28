@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import type { User } from "../../type/user";
 import { adminLogin, adminLogout, userLogin, userLogout } from "../api/auth";
+import { useEffect } from "react";
+import { getMeUser } from "../api/users";
 
 export type Admin = {
   id: string;
@@ -38,7 +40,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   error: null,
 
   setAdmin: (admin: Admin) => set({ admin }),
-  setUser: (user: User | null) => set({ user }),
+  setUser: (user) => set({ user, loading: false }),
   clearAuth: () =>
     set({ user: null, admin: null, error: null, loading: false }),
 
@@ -88,3 +90,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 }));
+
+// initialze Auth
+export const useInitializeAuthUser = () => {
+  const setUser = useAuthStore((state) => state.setUser);
+
+  useEffect(() => {
+    getMeUser()
+      .then((res) => setUser(res))
+      .catch(() => setUser(null));
+  }, [setUser]);
+};

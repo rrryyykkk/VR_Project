@@ -1,10 +1,14 @@
+// src/components/admin/TaskByAdmin.tsx
 import { useState } from "react";
 import { availableTask } from "../../data/360data";
 import type { UserVR } from "../../type/user";
 import type { SceneTask, VRTaskSession } from "../../type/VRdata";
-import { useSetTasks } from "../../app/store/TaskStore";
+import { useAssignTasks } from "../../app/store/TaskStore";
 
-type Props = { user: UserVR };
+type Props = {
+  user: UserVR;
+  onAssign?: (tasks: VRTaskSession[]) => void;
+};
 
 const formatTime = (seconds?: number) => {
   if (!seconds) return "No Limit";
@@ -13,10 +17,9 @@ const formatTime = (seconds?: number) => {
   return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 };
 
-export default function TaskByAdmin({ user }: Props) {
+export default function TaskByAdmin({ user, onAssign }: Props) {
   const [selected, setSelected] = useState<VRTaskSession[]>([]);
-  console.log("selected", selected);
-  const setTasks = useSetTasks(user.id);
+  const assignTasks = useAssignTasks(user.id);
 
   const toggleTask = (task: SceneTask, duration?: number) => {
     const exists = selected.find((t) => t.taskId === task.taskId);
@@ -28,9 +31,10 @@ export default function TaskByAdmin({ user }: Props) {
         {
           ...task,
           assignedBy: "admin-01",
-          duration: duration, // bisa undefined → No Limit
+          duration,
           remaining: duration ? duration * 60 : undefined,
-          status: "pending",
+          status: "inProgress" as const,
+          startedAt: new Date().toISOString(),
         },
       ]);
     }
@@ -39,16 +43,17 @@ export default function TaskByAdmin({ user }: Props) {
   const startAssign = () => {
     if (selected.length === 0) return;
 
-    console.log("Assigning tasks to user:", user.id);
-    console.log("Tasks payload:", selected);
+    const payload: VRTaskSession[] = selected.map((t) => ({
+      ...t,
+      status: "inProgress" as const, // wajib literal type
+      remaining: t.duration ? t.duration * 60 : undefined,
+      startedAt: t.startedAt ?? new Date().toISOString(),
+      userId: user.id,
+    }));
 
-    setTasks.mutate(selected, {
-      onSuccess: (data) => {
-        console.log("Mutation success:", data);
-      },
-      onError: (err) => {
-        console.error("Mutation error:", err);
-      },
+    assignTasks.mutate(payload, {
+      onSuccess: (tasks) => onAssign?.(tasks),
+      onError: (err) => console.error("❌ Error assigning tasks:", err),
     });
   };
 
@@ -59,7 +64,6 @@ export default function TaskByAdmin({ user }: Props) {
       <div className="grid gap-4">
         {availableTask.map((task) => {
           const sel = selected.find((t) => t.taskId === task.taskId);
-
           return (
             <div
               key={task.taskId}
@@ -85,7 +89,6 @@ export default function TaskByAdmin({ user }: Props) {
                 </span>
               </div>
 
-              {/* kalau task dipilih → muncul opsi durasi */}
               {sel && (
                 <div className="flex items-center gap-2 text-sm text-gray-700">
                   <label>Set Timer:</label>

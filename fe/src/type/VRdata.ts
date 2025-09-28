@@ -17,6 +17,7 @@ export interface Task {
   taskId: string;
   taskName: string;
   description: string;
+  sceneId: string;
   status: "completed" | "failed" | "pending";
   type: "interaction" | "navigation";
   timeSpent: number; // in seconds
@@ -73,9 +74,14 @@ export type VRTaskSession = {
   taskId: string;
   taskName: string;
   assignedBy: string;
+  description?: string;
+  sceneId: string;
   duration?: number; // menit
   status: "pending" | "inProgress" | "failed" | "completed" | "incomplete";
+  type: "interaction" | "navigation";
   remaining?: number; // detik
+  startedAt?: string;
+  finishedAt?: string;
 };
 
 export interface VRSessionExtended extends VRSession {

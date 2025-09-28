@@ -117,14 +117,22 @@ model Task {
   id String @id @default(cuid())
   taskId String
   taskName String
+  type String
   description String
   sceneId String
-  status Status
-  timeSpent Int
+  duration Int?
+  remaining Int?
+  startedAt DateTime?
+  finishedAt DateTime?
+  status Status @default(pending)
+  timeSpent Int @default(0)
 
   // Relasi ke VR Session
   sessionId String
   session   VRSession @relation(fields: [sessionId], references: [sessionId], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // 🔹 Room Visit

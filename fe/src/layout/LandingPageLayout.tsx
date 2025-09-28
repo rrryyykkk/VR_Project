@@ -1,18 +1,20 @@
+// src/layout/LandingPageLayout.tsx
+import { useInitializeAuthUser } from "../app/store/AuthStore";
 import FooterLP from "../components/landingPage/FooterLP";
 import NavbarLP from "../components/landingPage/NavbarLP";
 
 interface LandingPageProps {
   children: React.ReactNode;
 }
-
-const LandingPage = ({ children }: LandingPageProps) => {
+const LandingPageLayout = ({ children }: LandingPageProps) => {
+  useInitializeAuthUser();
   return (
-    <div className="min-h-screen">
+    <>
       <NavbarLP />
       {children}
       <FooterLP />
-    </div>
+    </>
   );
 };
 
-export default LandingPage;
+export default LandingPageLayout;

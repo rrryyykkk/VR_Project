@@ -1,10 +1,10 @@
+// src/components/NavbarLP.tsx
 import { useEffect, useState } from "react";
-import { RxHamburgerMenu, RxCross2 } from "react-icons/rx";
+import { RxHamburgerMenu } from "react-icons/rx";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "../../app/store/AuthStore";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { FaUserCircle } from "react-icons/fa";
-import { useUserProfile } from "../../app/store/UserStore";
 
 const menu = [
   { name: "Home", link: "/" },
@@ -20,10 +20,9 @@ const NavbarLP = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
 
-  const { data: user, isLoading, isError } = useUserProfile();
+  const user = useAuthStore((state) => state.user);
 
-  console.log("user:", user, "isLoading:", isLoading, "isError:", isError);
-  const { logoutUser } = useAuthStore();
+  const logoutUser = useAuthStore((state) => state.logoutUser);
 
   useEffect(() => {
     const handleScroll = () => setIsScroll(window.scrollY > 50);
@@ -31,9 +30,11 @@ const NavbarLP = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const logOutUser = () => {
-    logoutUser();
+  const handleLogout = async () => {
+    await logoutUser();
     navigate("/", { replace: true });
+    setDropdownOpen(false);
+    setHamburgerMenu(false);
   };
 
   return (
@@ -46,39 +47,36 @@ const NavbarLP = () => {
             : "bg-transparent"
         }`}
       >
-        {/* Left Logo */}
         <div className="flex p-5 font-bold text-2xl text-teal-400">
           M<span className="text-fuchsia-600">I</span>N
           <span className="text-fuchsia-600">D</span>
         </div>
 
-        {/* Right Menu */}
         <div className="flex p-5 justify-end items-center space-x-4">
           {/* Desktop Menu */}
           <div className="hidden lg:flex items-center space-x-6">
-            {menu.map((item, index) => (
-              <a
-                key={index}
-                href={item.link}
+            {menu.map((item, idx) => (
+              <Link
+                key={idx}
+                to={item.link}
                 className={`font-medium transition-colors ${
                   isScroll ? "text-gray-800" : "text-fuchsia-600"
                 } hover:text-fuchsia-400`}
               >
                 {item.name}
-              </a>
+              </Link>
             ))}
 
-            {/* ✅ Profile / Login */}
-            {isLoading ? null : isError || !user ? (
-              <a
-                href="/login"
+            {!user ? (
+              <Link
+                to="/login"
                 className="relative inline-block rounded-full px-4 py-2 font-bold text-white overflow-hidden group cursor-pointer"
               >
                 <span className="absolute inset-0 bg-gradient-to-r from-fuchsia-600 to-pink-500 rounded-full transition-transform duration-500 group-hover:scale-110 group-hover:blur-sm"></span>
                 <span className="relative z-10">Login</span>
-              </a>
+              </Link>
             ) : (
-              <div className="relative ">
+              <div className="relative">
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                   className="flex items-center cursor-pointer"
@@ -94,7 +92,6 @@ const NavbarLP = () => {
                   )}
                 </button>
 
-                {/* Dropdown */}
                 <AnimatePresence>
                   {dropdownOpen && (
                     <motion.div
@@ -103,38 +100,34 @@ const NavbarLP = () => {
                       exit={{ opacity: 0, scale: 0.9, y: -10 }}
                       transition={{ duration: 0.2 }}
                       className="absolute right-0 mt-3 w-60 rounded-2xl shadow-xl border border-white/20 
-                                 bg-gradient-to-br from-white/70 to-white/30 backdrop-blur-xl overflow-hidden z-50 "
+                                 bg-gradient-to-br from-white/70 to-white/30 backdrop-blur-xl overflow-hidden z-50"
                     >
-                      <div className="px-4 py-3 border-b border-white/20">
-                        <div className="flex items-center space-x-3">
-                          {user.imgProfile ? (
-                            <img
-                              src={user.imgProfile}
-                              alt="avatar"
-                              className="w-12 h-12 rounded-full border border-fuchsia-400 object-cover"
-                            />
-                          ) : (
-                            <FaUserCircle className="w-12 h-12 text-fuchsia-600 cursor-pointer" />
-                          )}
-                          <div>
-                            <p className="font-semibold text-gray-900">
-                              {user.fullName}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {user.email}
-                            </p>
-                          </div>
+                      <div className="px-4 py-3 border-b border-white/20 flex items-center space-x-3">
+                        {user.imgProfile ? (
+                          <img
+                            src={user.imgProfile}
+                            alt="avatar"
+                            className="w-12 h-12 rounded-full border border-fuchsia-400 object-cover"
+                          />
+                        ) : (
+                          <FaUserCircle className="w-12 h-12 text-fuchsia-600 cursor-pointer" />
+                        )}
+                        <div>
+                          <p className="font-semibold text-gray-900">
+                            {user.fullName}
+                          </p>
+                          <p className="text-sm text-gray-600">{user.email}</p>
                         </div>
                       </div>
 
-                      <a
-                        href="/profile"
+                      <Link
+                        to="/profile"
                         className="block px-4 py-3 text-gray-800 font-medium hover:bg-fuchsia-100 transition"
                       >
                         Profile
-                      </a>
+                      </Link>
                       <button
-                        onClick={logOutUser}
+                        onClick={handleLogout}
                         className="w-full text-left px-4 py-3 text-gray-800 font-medium hover:bg-fuchsia-100 transition cursor-pointer"
                       >
                         Logout
@@ -146,7 +139,7 @@ const NavbarLP = () => {
             )}
           </div>
 
-          {/* Hamburger Button (Mobile) */}
+          {/* Hamburger Menu */}
           <div className="block lg:hidden">
             <button
               onClick={() => setHamburgerMenu(true)}
@@ -158,11 +151,10 @@ const NavbarLP = () => {
         </div>
       </div>
 
-      {/* Hamburger Drawer (Mobile) */}
+      {/* Mobile Hamburger Menu */}
       <AnimatePresence>
         {hamburgerMenu && (
           <>
-            {/* Overlay */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -170,85 +162,81 @@ const NavbarLP = () => {
               className="fixed inset-0 z-40 bg-black/40"
               onClick={() => setHamburgerMenu(false)}
             />
-
-            {/* Drawer */}
             <motion.div
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed top-0 left-0 bottom-0 z-50 bg-white w-4/5 max-w-xs h-full px-8 py-6 flex flex-col justify-between shadow-2xl shadow-black/20 rounded-r-3xl"
+              className="fixed top-0 left-0 bottom-0 z-50 bg-white w-4/5 max-w-xs h-full px-6 py-6 flex flex-col justify-start shadow-2xl shadow-black/20 rounded-r-3xl overflow-y-auto"
             >
-              <div className="flex justify-end">
+              {/* Close Button */}
+              <div className="flex justify-end mb-4">
                 <button
                   onClick={() => setHamburgerMenu(false)}
-                  className="text-3xl text-gray-700 hover:text-fuchsia-600 p-1 rounded-full focus:outline-none"
-                  aria-label="Close menu"
+                  className="text-3xl text-fuchsia-600"
                 >
-                  <RxCross2 />
+                  &times;
                 </button>
               </div>
 
+              {/* User Info */}
+              {user && (
+                <div className="flex items-center mb-6 space-x-3 px-2 py-2 bg-fuchsia-50 rounded-xl shadow-sm">
+                  {user.imgProfile ? (
+                    <img
+                      src={user.imgProfile}
+                      alt="avatar"
+                      className="w-12 h-12 rounded-full border border-fuchsia-400 object-cover"
+                    />
+                  ) : (
+                    <FaUserCircle className="w-12 h-12 text-fuchsia-600" />
+                  )}
+                  <div>
+                    <p className="font-semibold text-gray-900">
+                      {user.fullName}
+                    </p>
+                    <p className="text-sm text-gray-600">{user.email}</p>
+                  </div>
+                </div>
+              )}
+
               {/* Menu Items */}
-              <div className="flex flex-col space-y-5 mt-6 overflow-y-auto">
-                {menu.map((item, index) => (
-                  <a
-                    key={index}
-                    href={item.link}
+              <div className="flex flex-col space-y-4">
+                {menu.map((item, idx) => (
+                  <Link
+                    key={idx}
+                    to={item.link}
                     onClick={() => setHamburgerMenu(false)}
-                    className="text-lg font-medium text-gray-800 hover:text-fuchsia-600 transition underline-offset-4 hover:underline"
+                    className="font-medium text-gray-800 hover:text-fuchsia-600 transition text-lg"
                   >
                     {item.name}
-                  </a>
+                  </Link>
                 ))}
 
-                {/* ✅ Mobile Profile / Login */}
-                {isLoading ? null : isError || !user ? (
-                  <a
-                    href="/login"
+                {!user ? (
+                  <Link
+                    to="/login"
                     onClick={() => setHamburgerMenu(false)}
-                    className="relative inline-block rounded-full text-center px-6 py-3 font-semibold text-white overflow-hidden group transition-all duration-300 mt-6"
+                    className="px-4 py-2 bg-fuchsia-600 text-white rounded-lg text-center font-semibold mt-4"
                   >
-                    <span className="absolute inset-0 bg-gradient-to-r from-fuchsia-600 to-pink-500 transition-transform duration-500 group-hover:scale-110 group-hover:blur-sm rounded-full"></span>
-                    <span className="relative z-10 text-white">Login</span>
-                  </a>
+                    Login
+                  </Link>
                 ) : (
-                  <div className="mt-6 space-y-3">
-                    <div className="bg-gradient-to-r from-fuchsia-500 to-pink-500 rounded-2xl p-4 text-white shadow-lg">
-                      <div className="flex items-center space-x-4">
-                        {user.imgProfile ? (
-                          <img
-                            src={user.imgProfile}
-                            alt="avatar"
-                            className="w-12 h-12 rounded-full border-2 border-white object-cover"
-                          />
-                        ) : (
-                          <FaUserCircle className="w-12 h-12 text-white" />
-                        )}
-                        <div>
-                          <p className="font-bold text-lg">{user.fullName}</p>
-                          <p className="text-sm opacity-80">{user.email}</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <a
-                      href="/profile"
+                  <>
+                    <Link
+                      to="/profile"
                       onClick={() => setHamburgerMenu(false)}
-                      className="block px-4 py-2 rounded-lg text-gray-700 hover:bg-fuchsia-100"
+                      className="px-4 py-2 text-gray-800 hover:bg-fuchsia-100 rounded-lg font-medium mt-4"
                     >
                       Profile
-                    </a>
+                    </Link>
                     <button
-                      onClick={() => {
-                        logOutUser();
-                        setHamburgerMenu(false);
-                      }}
-                      className="w-full text-left px-4 py-2 rounded-lg text-gray-700 hover:bg-fuchsia-100"
+                      onClick={handleLogout}
+                      className="px-4 py-2 text-gray-800 hover:bg-fuchsia-100 rounded-lg w-full text-left font-medium cursor-pointer"
                     >
                       Logout
                     </button>
-                  </div>
+                  </>
                 )}
               </div>
             </motion.div>

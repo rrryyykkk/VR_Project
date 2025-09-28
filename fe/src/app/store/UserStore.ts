@@ -14,14 +14,39 @@ import {
   getMeUser,
 } from "../api/users";
 import type { User, UserPayload } from "../../type/user";
+import { useEffect, useState } from "react";
 
-// Define User type (samakan sama backend kamu)
+/// Hook non-blocking untuk Navbar
+export const useUserProfileForNavbar = () => {
+  const [user, setUser] = useState<User | null | undefined>(undefined);
 
-// ✅ Get current user profile
+  useEffect(() => {
+    let mounted = true;
+    getMeUser()
+      .then((res) => {
+        if (mounted) {
+          setUser(res);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setUser(null);
+        }
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  return user;
+};
+
+// Hook global untuk fetch user dan set store
 export const useUserProfile = (
   options?: Partial<UseQueryOptions<User | null, Error>>
 ) => {
   const setUser = useAuthStore((state) => state.setUser);
+
   return useQuery<User | null, Error>({
     queryKey: ["userProfile"],
     queryFn: async () => {

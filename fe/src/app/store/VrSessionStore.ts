@@ -53,10 +53,14 @@ export const useCreateVrSession = () => {
   return useMutation<VRSession, Error, Omit<VRSession, "sessionId">>({
     mutationFn: createVrSession,
     onSuccess: (newSession) => {
+      console.log("✅ Mutation success, saved session:", newSession); // ✅ log
       // update cache admin list
       queryClient.setQueryData<VRSession[]>(["vrSessions"], (oldSessions) =>
         oldSessions ? [...oldSessions, newSession] : [newSession]
       );
+    },
+    onError: (err) => {
+      console.error("❌ Mutation failed:", err.message); // <-- log error
     },
   });
 };

@@ -1,78 +1,104 @@
-// src/app/store/TaskStore.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { VRTaskSession } from "../../type/VRdata";
+import {
+  deleteTasksByUser,
+  getAllTasks,
+  saveTask,
+  updateTask,
+} from "../../utils/idb";
 
 export const TASKS_KEY = ["vr-tasks"];
+export type UpdateTaskPayload = {
+  status: "completed" | "failed" | "inProgress";
+  remaining?: number;
+  startedAt?: string;
+  finishedAt?: string;
+  duration?: number;
+};
 
-// ---------------------------
-// GET TASKS
-// ---------------------------
-export function useTasks(userId: string) {
-  const qc = useQueryClient();
-
+// ---------------- GET TASKS ----------------
+export function useTasks() {
   return useQuery<VRTaskSession[]>({
-    queryKey: [...TASKS_KEY, userId],
+    queryKey: TASKS_KEY,
     queryFn: async () => {
-      const cached =
-        qc.getQueryData<VRTaskSession[]>([...TASKS_KEY, userId]) ?? [];
-      console.log(`[useTasks] queryFn for user ${userId}, cached:`, cached);
-      return cached;
+      const tasks = await getAllTasks();
+      console.log("[useTasks] fetched tasks:", tasks);
+      return tasks;
     },
-    initialData: () => {
-      const init =
-        qc.getQueryData<VRTaskSession[]>([...TASKS_KEY, userId]) ?? [];
-      console.log(`[useTasks] initialData for user ${userId}:`, init);
-      return init;
-    },
-    staleTime: Infinity,
+    staleTime: 10_000,
   });
 }
 
-// ---------------------------
-// SET TASKS (assign tasks from admin)
-// ---------------------------
-export function useSetTasks(userId: string) {
+// ---------------- ASSIGN TASKS ----------------
+export function useAssignTasks(userId: string) {
   const qc = useQueryClient();
 
   return useMutation({
     mutationFn: async (tasks: VRTaskSession[]) => {
-      console.log(`[useSetTasks] mutationFn for user ${userId}, tasks:`, tasks);
-      return tasks; // FE-only, langsung balikin
+      const tasksWithAssignedBy: VRTaskSession[] = tasks.map((t) => {
+        const hasTimer = t.duration && t.duration > 0;
+
+        return {
+          ...t,
+          assignedBy: "admin-01",
+          userId,
+          status: "inProgress" as const, // ✅ literal type
+          remaining: hasTimer ? t.duration! * 60 : undefined,
+          startedAt: new Date().toISOString(),
+        };
+      });
+
+      await saveTask(tasksWithAssignedBy);
+
+      console.log("✅ Tasks successfully saved to IndexedDB (with userId):");
+      console.table(tasksWithAssignedBy);
+
+      return tasksWithAssignedBy;
     },
     onSuccess: (tasks) => {
-      console.log(
-        `[useSetTasks] onSuccess → setQueryData for user ${userId}:`,
-        tasks
-      );
-      qc.setQueryData([...TASKS_KEY, userId], tasks);
+      qc.setQueryData(TASKS_KEY, tasks);
+      console.log("Tasks assigned and state updated:", tasks);
     },
+    onError: (err) => console.error("Error assigning tasks:", err),
   });
 }
 
-// ---------------------------
-// UPDATE TASK (start/finish task or countdown)
-// ---------------------------
-export function useUpdateTask(userId: string) {
+// ---------------- UPDATE TASK ----------------
+export function useUpdateTask() {
   const qc = useQueryClient();
-
   return useMutation({
-    mutationFn: async (task: VRTaskSession) => {
-      console.log(`[useUpdateTask] mutationFn for user ${userId}, task:`, task);
-      return task;
+    mutationFn: async (params: {
+      taskId: string;
+      payload: UpdateTaskPayload;
+    }) => {
+      const payload = { ...params.payload };
+
+      // kalau inProgress, set startedAt kalau belum ada
+      if (payload.status === "inProgress" && !payload.startedAt) {
+        payload.startedAt = new Date().toISOString();
+      }
+
+      // kalau completed atau failed, set finishedAt
+      if (payload.status === "completed" || payload.status === "failed") {
+        payload.finishedAt = new Date().toISOString();
+      }
+
+      return updateTask(params.taskId, payload);
     },
-    onSuccess: (task) => {
-      console.log(
-        `[useUpdateTask] onSuccess update for user ${userId}, task:`,
-        task
+    onSuccess: (updatedTask) => {
+      console.log("Task updated:", updatedTask);
+      if (!updatedTask) return;
+      qc.setQueryData<VRTaskSession[]>(TASKS_KEY, (old = []) =>
+        old.map((t) =>
+          t.taskId === updatedTask.taskId ? { ...t, ...updatedTask } : t
+        )
       );
-      qc.setQueryData<VRTaskSession[]>([...TASKS_KEY, userId], (old = []) => {
-        const updated = old.map((t) => (t.taskId === task.taskId ? task : t));
-        console.log(
-          `[useUpdateTask] updated cache for user ${userId}:`,
-          updated
-        );
-        return updated;
-      });
     },
+    onError: (err) => console.error("Error updating task:", err),
   });
+}
+
+// ---------------- DELETE TASKS USER ----------------
+export async function removeTasksForUser(userId: string) {
+  await deleteTasksByUser(userId);
 }

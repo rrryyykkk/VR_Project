@@ -1,7 +1,7 @@
-import { useEffect } from "react";
-import type { VRRecorderHandle } from "./VRRecorder";
+import { useEffect, useRef } from "react";
 import { useTasks, useUpdateTask } from "../../../app/store/TaskStore";
 import type { VRTaskSession } from "../../../type/VRdata";
+import type { VRRecorderHandle } from "./VRRecorder";
 
 type Props = {
   recorderRef: React.RefObject<VRRecorderHandle | null>;
@@ -14,52 +14,62 @@ const formatTime = (sec?: number) =>
     ? ""
     : `${Math.floor(sec / 60)}:${(sec % 60).toString().padStart(2, "0")}`;
 
-export default function VRTaskPanel({
-  recorderRef,
-  isRecording,
-  userId,
-}: Props) {
-  const { data: tasks = [] } = useTasks(userId);
-  const updateTask = useUpdateTask(userId);
+export default function VRTaskPanel({ isRecording }: Props) {
+  const { data: tasks = [] } = useTasks();
+  const updateTask = useUpdateTask();
+  const lastTasksRef = useRef<VRTaskSession[]>([]);
 
-  // log tasks ke console
+  // simpan tasks terbaru di ref
   useEffect(() => {
-    console.log("[VRTaskPanel] tasks for user:", userId, tasks);
-  }, [tasks, userId]);
+    lastTasksRef.current = tasks;
+  }, [tasks]);
 
-  // countdown timer untuk task inProgress
+  // countdown auto jalan (tiap detik)
   useEffect(() => {
-    if (!isRecording) return;
+    if (!isRecording) {
+      // stop recording → semua task yg belum selesai jadi failed
+      lastTasksRef.current.forEach((t) => {
+        if (t.status === "inProgress") {
+          updateTask.mutate({
+            taskId: t.taskId,
+            payload: {
+              status: "failed",
+              finishedAt: new Date().toISOString(),
+              remaining: t.remaining ?? 0,
+            },
+          });
+          console.log("❌ Task failed (record stopped):", t.taskName);
+        }
+      });
+      return;
+    }
+
+    // countdown per detik untuk task yg ada timer
     const id = setInterval(() => {
-      tasks.forEach((t) => {
-        if (t.status === "inProgress" && t.remaining) {
-          if (t.remaining <= 1) {
-            updateTask.mutate({ ...t, remaining: 0, status: "failed" });
-          } else {
-            updateTask.mutate({ ...t, remaining: t.remaining - 1 });
-          }
+      lastTasksRef.current.forEach((t) => {
+        if (t.status === "inProgress" && t.remaining !== undefined) {
+          const newRemaining = t.remaining - 1;
+          updateTask.mutate({
+            taskId: t.taskId,
+            payload: {
+              status: newRemaining <= 0 ? "failed" : "inProgress",
+              remaining: Math.max(newRemaining, 0),
+            },
+          });
         }
       });
     }, 1000);
+
     return () => clearInterval(id);
-  }, [isRecording, tasks, updateTask]);
+  }, [isRecording, updateTask]);
 
-  // start task
-  const startTask = (t: VRTaskSession) =>
-    updateTask.mutate({
-      ...t,
-      status: t.duration ? "inProgress" : "completed",
-      remaining: t.duration ? t.duration * 60 : undefined,
-    });
-
-  // finish task
-  const finishTask = (t: VRTaskSession) =>
-    updateTask.mutate({ ...t, status: "completed", remaining: 0 });
-
-  // kirim update ke recorder
+  // log kalau tasks berubah
   useEffect(() => {
-    recorderRef.current?.logInteraction("taskUpdate", { tasks });
-  }, [tasks, recorderRef]);
+    if (JSON.stringify(lastTasksRef.current) !== JSON.stringify(tasks)) {
+      console.log("Tasks changed:", tasks);
+      lastTasksRef.current = tasks;
+    }
+  }, [tasks]);
 
   return (
     <div className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/60 p-4 rounded w-64 text-white z-50">
@@ -83,26 +93,12 @@ export default function VRTaskPanel({
                 {t.status}
               </span>
             </div>
-            {t.duration && t.status === "inProgress" && (
+
+            {/* tampilkan timer kalau ada */}
+            {t.remaining !== undefined && (
               <div className="text-right text-xs mt-1">
                 {formatTime(t.remaining)}
               </div>
-            )}
-            {t.status === "pending" && (
-              <button
-                className="mt-1 w-full bg-blue-600 rounded px-2 py-1 text-sm"
-                onClick={() => startTask(t)}
-              >
-                Start
-              </button>
-            )}
-            {t.status === "inProgress" && (
-              <button
-                className="mt-1 w-full bg-green-600 rounded px-2 py-1 text-sm"
-                onClick={() => finishTask(t)}
-              >
-                Finish
-              </button>
             )}
           </li>
         ))}

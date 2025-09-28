@@ -16,8 +16,15 @@ import type {
 import { useCreateVrSession } from "../../../app/store/VrSessionStore";
 import type { User } from "../../../type/user";
 import { useToast } from "../../../hooks/ToastContext";
-import { deleteAllChunks, getAllChunks, saveChunk } from "../../../utils/idb";
+import {
+  deleteAllChunks,
+  deleteTasksByUser,
+  getAllChunks,
+  saveChunk,
+} from "../../../utils/idb";
 import { useIsRecord } from "../../../app/store/ActivityStore";
+import { useQueryClient } from "@tanstack/react-query";
+import { useTasks, useUpdateTask } from "../../../app/store/TaskStore";
 
 interface VRRecorderProps {
   currentSceneId: string;
@@ -35,7 +42,6 @@ export type VRRecorderHandle = {
     target: { id: string; name: string; targetType: string }
   ): void;
   logInteraction(type: "taskUpdate", target: { tasks: VRTaskSession[] }): void;
-
   isRecording: boolean;
 };
 
@@ -62,25 +68,99 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
       type: "start" | "stop";
       open: boolean;
       error?: string;
-    }>({
-      type: "start",
-      open: false,
-    });
+    }>({ type: "start", open: false });
 
     const sessionRef = useRef<VRSession | null>(null);
     const lastSceneRef = useRef<{ id: string; name: string } | null>(null);
-    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+    // 🔥 Pisahin interval untuk heartbeat dan rotation
+    const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const rotationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(
+      null
+    );
+
     const dismissedStartScenes = useRef<Set<string>>(new Set());
     const rotationRef = useRef(rotation);
 
     const { addToast } = useToast();
     const createSessionMutation = useCreateVrSession();
     const { mutate: setIsRecord } = useIsRecord();
+    const queryClient = useQueryClient();
 
+    // -----------------------------
+    // Tasks handling
+    // -----------------------------
+    const { data: tasks = [] } = useTasks();
+    const updateTask = useUpdateTask();
+    const lastTasksRef = useRef<VRTaskSession[]>([]);
+    useEffect(() => {
+      lastTasksRef.current = tasks;
+    }, [tasks]);
+
+    // -----------------------------
+    // Helpers
+    // -----------------------------
+    const computeTimeSpent = (t: VRTaskSession): number => {
+      if (t.startedAt && t.finishedAt) {
+        const diffMs =
+          new Date(t.finishedAt).getTime() - new Date(t.startedAt).getTime();
+        return Math.max(0, Math.floor(diffMs / 1000));
+      }
+      if (t.duration !== undefined) {
+        const total = t.duration * 60;
+        const rem = t.remaining ?? total;
+        return Math.max(0, total - rem);
+      }
+      return 0;
+    };
+
+    const mapVRTaskSessionToTask = (t: VRTaskSession): Task => ({
+      taskId: t.taskId,
+      taskName: t.taskName,
+      description: t.description ?? "",
+      status:
+        t.status === "incomplete"
+          ? "failed"
+          : t.status === "inProgress"
+          ? "pending"
+          : (t.status as Task["status"]),
+      sceneId: t.sceneId ?? currentSceneId,
+      type: t.type,
+      timeSpent: computeTimeSpent(t),
+    });
+
+    // -----------------------------
+    // Countdown timer untuk tasks
+    // -----------------------------
+    useEffect(() => {
+      if (!recording) return;
+      const interval = setInterval(() => {
+        lastTasksRef.current.forEach((t) => {
+          if (t.status === "inProgress" && t.remaining !== undefined) {
+            const newRemaining = t.remaining - 1;
+            updateTask.mutate({
+              taskId: t.taskId,
+              payload: {
+                remaining: Math.max(newRemaining, 0),
+                status: newRemaining <= 0 ? "failed" : "inProgress",
+              },
+            });
+          }
+        });
+      }, 1000);
+      return () => clearInterval(interval);
+    }, [recording, updateTask]);
+
+    // -----------------------------
+    // Sync rotation
+    // -----------------------------
     useEffect(() => {
       rotationRef.current = rotation;
     }, [rotation]);
 
+    // -----------------------------
+    // Cleanup sessionStorage on unload
+    // -----------------------------
     useEffect(() => {
       const handleUnload = () => {
         sessionStorage.removeItem(STORAGE_KEY);
@@ -90,26 +170,26 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
       return () => window.removeEventListener("beforeunload", handleUnload);
     }, []);
 
-    // heartbeat isRecording
+    // -----------------------------
+    // Heartbeat untuk isRecord
+    // -----------------------------
     useEffect(() => {
       if (!user || !recording) return;
-
-      intervalRef.current = setInterval(() => {
-        setIsRecord(true);
-      }, 5000); // 5 detik
-
+      heartbeatRef.current = setInterval(() => setIsRecord(true), 2000);
       return () => {
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-          intervalRef.current = null;
-          setIsRecord(false); // reset saat recording berhenti / cleanup
+        if (heartbeatRef.current) {
+          clearInterval(heartbeatRef.current);
+          heartbeatRef.current = null;
+          setIsRecord(false);
         }
       };
     }, [recording, user, setIsRecord]);
 
+    // -----------------------------
+    // Show start/stop modal
+    // -----------------------------
     useEffect(() => {
       if (!currentSceneId) return;
-
       if (exitSceneIds.includes(currentSceneId)) {
         if (recording) setShowModal({ type: "stop", open: true });
         else {
@@ -118,7 +198,6 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
         }
         return;
       }
-
       if (
         startSceneIds.includes(currentSceneId) &&
         !recording &&
@@ -134,7 +213,9 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
       onAllowEnterScene,
     ]);
 
-    // record rotation
+    // -----------------------------
+    // Record rotation
+    // -----------------------------
     const recordRotationOnce = async () => {
       if (!sessionRef.current) return;
       const nowIso = new Date().toISOString();
@@ -145,12 +226,10 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
         rotY: r.y,
       };
       buffer.push(newRotation);
-
       if (buffer.length >= MAX_BUFFER) {
         await saveChunk(buffer);
         buffer = [];
       }
-
       const updated: VRSession = {
         ...sessionRef.current,
         duration: Math.max(
@@ -162,28 +241,26 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
         ),
         cameraRotations: [],
       };
-
       sessionRef.current = updated;
       setSession(updated);
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     };
 
     useEffect(() => {
-      if (!recording) {
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-          intervalRef.current = null;
-        }
-        return;
-      }
-
-      intervalRef.current = setInterval(recordRotationOnce, 300);
+      if (!recording) return;
+      rotationIntervalRef.current = setInterval(recordRotationOnce, 200);
       recordRotationOnce();
       return () => {
-        if (intervalRef.current) clearInterval(intervalRef.current);
+        if (rotationIntervalRef.current) {
+          clearInterval(rotationIntervalRef.current);
+          rotationIntervalRef.current = null;
+        }
       };
     }, [recording]);
 
+    // -----------------------------
+    // Track scene changes
+    // -----------------------------
     useEffect(() => {
       if (!recording || !sessionRef.current || !currentSceneId) return;
       if (lastSceneRef.current?.id === currentSceneId) return;
@@ -221,17 +298,19 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
       setSession(updated);
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
       lastSceneRef.current = { id: currentSceneId, name: currentSceneName };
-
       recordRotationOnce();
     }, [currentSceneId, currentSceneName, recording]);
 
+    // -----------------------------
+    // Start / Stop Recording
+    // -----------------------------
     const handleStartRecord = () => {
       const startIso = new Date().toISOString();
       const newSession: VRSession = {
         sessionId: crypto.randomUUID(),
         userId: user?.id || "guest",
         startTime: startIso,
-        endTime: "",
+        endTime: startIso,
         duration: 0,
         cameraRotations: [],
         interactions: [],
@@ -247,10 +326,25 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
       setSession(newSession);
       sessionRef.current = newSession;
       lastSceneRef.current = { id: currentSceneId, name: currentSceneName };
+
       if (user) {
         setIsRecord(true);
         setRecording(true);
         addToast("Recording dimulai", "success");
+
+        // 🚀 langsung jalankan tasks timer
+        lastTasksRef.current.forEach((t) => {
+          if (t.status === "pending") {
+            updateTask.mutate({
+              taskId: t.taskId,
+              payload: {
+                status: "inProgress",
+                startedAt: new Date().toISOString(),
+                remaining: t.duration ? t.duration * 60 : undefined,
+              },
+            });
+          }
+        });
       } else {
         setShowModal({
           type: "start",
@@ -265,23 +359,40 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
 
     const handleStopRecord = async () => {
       if (!recording || !sessionRef.current) return;
+
       const stopIso = new Date().toISOString();
+
+      // Tutup room history terakhir
       const rh = sessionRef.current.roomHistory || [];
       const lastOpenIdx = [...rh].reverse().findIndex((rv) => !rv.exitTime);
-      let closedHistory = rh;
-      if (lastOpenIdx !== -1) {
-        const idx = rh.length - 1 - lastOpenIdx;
-        closedHistory = [
-          ...rh.slice(0, idx),
-          { ...rh[idx], exitTime: stopIso },
-          ...rh.slice(idx + 1),
-        ];
-      }
+      const closedHistory =
+        lastOpenIdx !== -1
+          ? [
+              ...rh.slice(0, rh.length - lastOpenIdx - 1),
+              { ...rh[rh.length - 1 - lastOpenIdx], exitTime: stopIso },
+              ...rh.slice(rh.length - lastOpenIdx),
+            ]
+          : rh;
 
+      // Ambil semua chunks rotation
       const chunks = await getAllChunks();
       const allRotations = chunks.flatMap((c) => c.data).concat(buffer);
       buffer = [];
       await deleteAllChunks();
+
+      // ✅ Update semua tasks otomatis
+      lastTasksRef.current.forEach((t) => {
+        if (t.status === "inProgress") {
+          updateTask.mutate({
+            taskId: t.taskId,
+            payload: {
+              status: "completed",
+              finishedAt: stopIso,
+              remaining: 0,
+            },
+          });
+        }
+      });
 
       const finished: VRSession = {
         ...sessionRef.current,
@@ -296,47 +407,51 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
         ),
         roomHistory: closedHistory,
         cameraRotations: allRotations,
+        tasks: lastTasksRef.current.map(mapVRTaskSessionToTask),
       };
 
       setRecording(false);
       setSession(finished);
       sessionRef.current = finished;
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(finished));
-      setShowModal((p) => ({ ...p, open: false }));
+      setShowModal({ type: "start", open: false });
       dismissedStartScenes.current.clear();
+      setIsRecord(false);
 
       if (user) {
-        setIsRecord(false);
         createSessionMutation.mutate(finished, {
-          onSuccess: () => addToast("Sesi ini berhasil disimpan!", "success"),
+          onSuccess: async () => {
+            try {
+              await deleteTasksByUser(user.id);
+              queryClient.setQueryData<VRTaskSession[]>(["vr-tasks"], []);
+              addToast("Sesi ini berhasil disimpan!", "success");
+            } catch (err) {
+              console.error("Gagal hapus tasks dari IDB:", err);
+            }
+          },
           onError: () => addToast("Gagal menyimpan sesi", "error"),
         });
-      } else
+      } else {
+        await deleteTasksByUser("guest");
+        queryClient.setQueryData<VRTaskSession[]>(["vr-tasks"], []);
         addToast("Recording dihentikan (guest, tidak disimpan)", "success");
+      }
 
+      setSession(null);
+      sessionRef.current = null;
       onAllowEnterScene?.();
     };
 
+    // -----------------------------
+    // Log Interactions
+    // -----------------------------
     useImperativeHandle(ref, () => ({
       logInteraction(type, target) {
         if (!sessionRef.current || !recording) return;
 
         if (type === "taskUpdate") {
           const vrTasks = (target as { tasks: VRTaskSession[] }).tasks;
-
-          const mappedTasks: Task[] = vrTasks.map((t) => ({
-            taskId: t.taskId,
-            taskName: t.taskName,
-            description: "",
-            status:
-              t.status === "inProgress"
-                ? "pending"
-                : t.status === "incomplete"
-                ? "failed"
-                : t.status,
-            type: "interaction",
-            timeSpent: t.duration ? t.duration * 60 - (t.remaining ?? 0) : 0,
-          }));
+          const mappedTasks: Task[] = vrTasks.map(mapVRTaskSessionToTask);
 
           const updated: VRSession = {
             ...sessionRef.current,
@@ -383,17 +498,21 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
       isRecording: recording,
     }));
 
-    // --- Tambahan cleanup effect agar isRecord reset saat unmount ---
+    // -----------------------------
+    // Cleanup on unmount
+    // -----------------------------
     useEffect(() => {
       return () => {
         setIsRecord(false);
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-          intervalRef.current = null;
-        }
+        if (heartbeatRef.current) clearInterval(heartbeatRef.current);
+        if (rotationIntervalRef.current)
+          clearInterval(rotationIntervalRef.current);
       };
     }, [setIsRecord]);
 
+    // -----------------------------
+    // UI
+    // -----------------------------
     return (
       <>
         <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
@@ -429,10 +548,10 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
                     onClick={() => {
                       if (showModal.type === "start") {
                         dismissedStartScenes.current.add(currentSceneId);
-                        setShowModal((p) => ({ ...p, open: false }));
+                        setShowModal({ type: "start", open: false });
                         onAllowEnterScene?.();
                       } else {
-                        setShowModal((p) => ({ ...p, open: false }));
+                        setShowModal({ type: "start", open: false });
                         onAllowEnterScene?.();
                       }
                     }}

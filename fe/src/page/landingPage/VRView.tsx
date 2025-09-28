@@ -1,4 +1,3 @@
-// src/pages/VR/VRView.tsx
 import { Canvas } from "@react-three/fiber";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router";
@@ -19,6 +18,8 @@ import { xrStore } from "../../hooks/xrStore";
 import { XR } from "@react-three/xr";
 import { useUserProfile } from "../../app/store/UserStore";
 import { useIsActive } from "../../app/store/ActivityStore";
+import VRTaskPanel from "../../components/landingPage/VR/VRTaskPanel";
+import VRTaskWatcher from "../../components/landingPage/VR/VRTaskWatcher";
 
 // ✅ helper untuk build target object
 function buildInteractionTarget(
@@ -60,6 +61,13 @@ export default function VRView() {
 
   const [autoRotate, setAutoRotate] = useState(true);
   const autoRotateTimeout = useRef<number | null>(null);
+  const hasLogged = useRef(false);
+
+  useEffect(() => {
+    if (user && !hasLogged.current) {
+      hasLogged.current = true;
+    }
+  }, [user]);
 
   // pause autoRotate saat user interaksi
   useEffect(() => {
@@ -195,6 +203,14 @@ export default function VRView() {
         exitSceneIds={exitSceneIds}
         user={user}
       />
+
+      <VRTaskPanel
+        recorderRef={recorderRef}
+        isRecording={recorderRef.current?.isRecording ?? false}
+        userId={user?.id || "guest"}
+      />
+
+      <VRTaskWatcher currentSceneId={currentScene.id} />
 
       {/* Footer */}
       <VRFooter

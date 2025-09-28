@@ -36,6 +36,9 @@ const taskSchema = z.object({
   taskId: z.string().min(1).max(500),
   taskName: z.string().min(1).max(500),
   status: z.enum(["completed", "failed", "pending"]),
+  sceneId: z.string().min(1).max(500),
+  type: z.enum(["interaction", "navigation"]),
+  description: z.string().min(1).max(500).optional(),
   timeSpent: z
     .number()
     .int()
@@ -83,6 +86,7 @@ export const createVRSession = async (req, res) => {
       });
     }
     const data = parsed.data;
+    console.log("📤 Payload dikirim ke API /vrSession:", data);
 
     // Otorisasi: admin boleh buat untuk siapa saja, user biasa hanya untuk dirinya
     if (!isAdmin(req) && !isSelf(req, data.userId)) {
@@ -140,13 +144,43 @@ export const createVRSession = async (req, res) => {
       // bulk insert task
       if (tasks.length) {
         await tx.task.createMany({
-          data: tasks.map((task) => ({
-            sessionId: created.sessionId,
-            taskId: task.taskId,
-            taskName: task.taskName,
-            Status: task.status,
-            timeSpent: task.timeSpent,
-          })),
+          data: tasks.map((task) => {
+            const duration = task.duration ?? 0; // total waktu (detik)
+            const remaining = task.remaining ?? duration;
+            const startedAt = task.startedAt ? new Date(task.startedAt) : null;
+            const finishedAt = task.finishedAt
+              ? new Date(task.finishedAt)
+              : null;
+
+            let timeSpent = 0;
+
+            if (duration > 0) {
+              // 🔹 Timer task → resmi BE hitung dari duration & remaining
+              timeSpent = Math.max(0, duration - remaining);
+            } else if (startedAt && finishedAt) {
+              // 🔹 Non-timer task → hitung dari start → finish
+              timeSpent = Math.max(
+                0,
+                Math.floor((finishedAt.getTime() - startedAt.getTime()) / 1000)
+              );
+            }
+
+            return {
+              sessionId: created.sessionId,
+              taskId: task.taskId,
+              taskName: task.taskName,
+              status: task.status,
+              type: task.type,
+              description: task.description,
+              sceneId: task.sceneId,
+              timeSpent,
+              // 🔹 simpan juga biar gak hilang
+              duration: duration > 0 ? duration : null,
+              remaining: remaining >= 0 ? remaining : null,
+              startedAt,
+              finishedAt,
+            };
+          }),
         });
       }
 

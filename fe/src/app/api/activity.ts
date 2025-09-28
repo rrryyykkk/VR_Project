@@ -1,11 +1,11 @@
 import { api } from "./Axios";
 
+// ✅ user: set active
 export const setIsActive = async (isActive: boolean) => {
-  const res = await api.post("/activity/isActive", { isActive });
-  return res;
+  return await api.post("/activity/isActive", { isActive });
 };
 
+// ✅ user: set record
 export const setIsRecord = async (isRecord: boolean) => {
-  const res = await api.post("/activity/isRecord", { isRecord });
-  return res;
+  return api.post("/activity/isRecord", { isRecord });
 };

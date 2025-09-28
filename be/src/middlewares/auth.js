@@ -7,7 +7,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 export const authMiddleware = (role) => async (req, res, next) => {
   const tokenName = role === "admin" ? "tokenAdmin" : "tokenUser";
   const token = req.cookies[tokenName];
-  console.log("authToken", token);
+
   if (!token) return res.status(401).json({ message: "Token required" });
 
   try {

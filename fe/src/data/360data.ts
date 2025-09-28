@@ -1515,40 +1515,42 @@ export const dataCilacap: Data[] = [
   },
 ];
 
-export const availableTask: SceneTask[] = [
+const taskRule: Record<
+  string,
   {
-    taskId: "task-01",
-    taskName: "Bangku Aula",
-    description: "Interaksi dengan bangku aula( duduk di bangku Aula )",
-    sceneId: "34",
-    locationId: "cilacap",
+    type: "interaction" | "navigation";
+    description: string;
+  }
+> = {
+  "34": {
     type: "interaction",
+    description: "interaksi dengan bangku aula (duduk di bangku Aula)",
   },
-  {
-    taskId: "task-02",
-    taskName: "Papan Tulis",
-    description: "Interaksi dengan Papan Tulis( Berdiri di depan Papan Tulis )",
-    sceneId: "35",
-    locationId: "cilacap",
-    type: "interaction",
-  },
-  {
-    taskId: "task-03",
-    taskName: "Mimbar Aula",
-    description: "Interaksi dengan Mimbar Aula( Berdiri di Mimbar Aula)",
-    sceneId: "36",
-    locationId: "cilacap",
-    type: "interaction",
-  },
-  {
-    taskId: "task-04",
-    taskName: "Toilet Dalam Aula",
-    description: "Masuk ke Toilet Dalam Aula( Berdiri di Toilet Dalam Aula )",
-    sceneId: "38",
-    locationId: "cilacap",
+  "35": {
     type: "navigation",
+    description: "Interaksi dengan papan tulis (berdiri di depan papan tulis)",
   },
-];
+  "36": {
+    type: "interaction",
+    description: "Interaksi dengan mimbar aula (berdiri di mimbar aula)",
+  },
+  "38": {
+    type: "navigation",
+    description:
+      "Masuk ke Toilet Dalam Aula (berdiri di dalam Toilet Dalam Aula)",
+  },
+};
+
+export const availableTask: SceneTask[] = dataCilacap
+  .filter((scene) => taskRule[scene.id])
+  .map((scene, idx) => ({
+    taskId: `task-${String(idx + 1).padStart(2, "0")}`,
+    taskName: scene.name,
+    description: taskRule[scene.id].description,
+    sceneId: scene.id,
+    locationId: scene.locationId,
+    type: taskRule[scene.id].type,
+  }));
 
 export const location: Location[] = [
   {

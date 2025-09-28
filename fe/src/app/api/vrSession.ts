@@ -9,7 +9,9 @@ export const getAllVrSessionByAdmin = async (): Promise<VRSession[]> => {
 export const createVrSession = async (
   data: Omit<VRSession, "sessionId">
 ): Promise<VRSession> => {
+  console.log("📤 Payload dikirim ke API /vrSession:", data); // log sebelum kirim
   const res = await api.post("/vrSession/", data);
+  console.log("📥 Response dari API:", res.data);
   return res.data;
 };
 

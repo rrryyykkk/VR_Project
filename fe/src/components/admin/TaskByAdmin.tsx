@@ -57,7 +57,6 @@ export default function TaskByAdmin({ user, onAssign }: Props) {
 
     assignTasks.mutate(payload, {
       onSuccess: (tasks) => onAssign?.(tasks),
-      onError: (err) => console.error("❌ Error assigning tasks:", err),
     });
   };
 

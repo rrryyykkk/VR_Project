@@ -26,7 +26,6 @@ export default function VRTaskWatcher({ currentSceneId }: Props) {
               remaining: 0,
             },
           });
-          console.log("✅ Task completed automatically:", sessionTask.taskName);
         }
       });
   }, [currentSceneId, tasks, updateTask]);

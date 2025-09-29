@@ -39,7 +39,6 @@ const VRSessionAdmin = () => {
     isError: boolean;
     refetch: () => void;
   };
-  console.log("users", users);
 
   const handleDetailClick = (user: UserVR) => {
     if (user.isActive && user.isRecord) {

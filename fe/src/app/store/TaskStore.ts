@@ -23,7 +23,6 @@ export function useTasks() {
     queryKey: TASKS_KEY,
     queryFn: async () => {
       const tasks = await getAllTasks();
-      console.log("[useTasks] fetched tasks:", tasks);
       return tasks;
     },
     staleTime: 10_000,
@@ -55,16 +54,13 @@ export function useAssignTasks(userId: string) {
 
       await saveTask(tasksWithAssignedBy);
 
-      console.log("✅ Tasks successfully saved to IndexedDB (with userId):");
       console.table(tasksWithAssignedBy);
 
       return tasksWithAssignedBy;
     },
     onSuccess: (tasks) => {
       qc.setQueryData(TASKS_KEY, tasks);
-      console.log("Tasks assigned and state updated:", tasks);
     },
-    onError: (err) => console.error("Error assigning tasks:", err),
   });
 }
 
@@ -91,7 +87,6 @@ export function useUpdateTask() {
       return updateTask(params.taskId, payload);
     },
     onSuccess: (updatedTask) => {
-      console.log("Task updated:", updatedTask);
       if (!updatedTask) return;
       qc.setQueryData<VRTaskSession[]>(TASKS_KEY, (old = []) =>
         old.map((t) =>
@@ -99,7 +94,6 @@ export function useUpdateTask() {
         )
       );
     },
-    onError: (err) => console.error("Error updating task:", err),
   });
 }
 

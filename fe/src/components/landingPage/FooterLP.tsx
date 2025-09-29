@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { FaHeart } from "react-icons/fa";
 import { useInView } from "react-intersection-observer";
 
 const Services = [
@@ -9,17 +8,16 @@ const Services = [
   { name: "Kegiatan Rekreasi", link: "#" },
 ];
 
-const AboutUs = [
-  { name: "Profil Panti", link: "/about" },
-  { name: "Visi & Misi", link: "#" },
+const AboutMIND = [
+  { name: "Profil MIND Platform", link: "#" },
+  { name: "Visi & Misi Penelitian", link: "#" },
   { name: "Galeri", link: "#" },
-  { name: "Hubungi Kami", link: "/contact" },
+  { name: "Hubungi Tim Penelitian", link: "#" },
 ];
 
 const Information = [
   { name: "Kebijakan Privasi", link: "#" },
-  { name: "Syarat & Ketentuan", link: "#" },
-  { name: "Donasi", link: "#" },
+  { name: "Syarat & Ketentuan Partisipasi", link: "#" },
   { name: "FAQ", link: "#" },
 ];
 
@@ -31,7 +29,7 @@ const FooterLP = () => {
 
   return (
     <div className="relative mt-20">
-      {/* Haikei wave divider */}
+      {/* Wave Divider */}
       <svg
         className="w-full h-12 md:h-16 lg:h-20 xl:h-24 text-fuchsia-100 -mb-1 md:-mb-2 lg:-mb-4"
         viewBox="0 0 1440 320"
@@ -52,46 +50,90 @@ const FooterLP = () => {
         className="bg-gradient-to-b from-fuchsia-50 to-white text-gray-700 px-6 md:px-10 py-12"
       >
         <div className="max-w-6xl mx-auto grid md:grid-cols-4 gap-10">
-          {/* Logo */}
+          {/* Logo & MIND tagline */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.8, delay: 0.2 }}
             className="space-y-4"
           >
-            <img src="/vite.svg" alt="Logo" className="w-32" />
+            <img src="/logo/1.png" alt="MIND Platform Logo" className="w-32" />
+            <p className="text-sm text-gray-600">
+              Mixedreality Intelligent Neurocognitive Diagnosis Platform
+            </p>
           </motion.div>
 
-          {/* Sections */}
-          {[
-            { title: "Layanan", items: Services },
-            { title: "Tentang Kami", items: AboutUs },
-            { title: "Informasi", items: Information },
-          ].map((section, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.8, delay: 0.3 + idx * 0.2 }}
-              className="space-y-3"
-            >
-              <h3 className="text-lg font-semibold text-fuchsia-600 mb-2">
-                {section.title}
-              </h3>
-              <ul className="space-y-2">
-                {section.items.map((item, index) => (
-                  <li key={index}>
-                    <a
-                      href={item.link}
-                      className="text-gray-600 hover:text-fuchsia-600 transition"
-                    >
-                      {item.name}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          ))}
+          {/* Services */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="space-y-3"
+          >
+            <h3 className="text-lg font-semibold text-fuchsia-600 mb-2">
+              Layanan
+            </h3>
+            <ul className="space-y-2">
+              {Services.map((item, index) => (
+                <li key={index}>
+                  <a
+                    href={item.link}
+                    className="text-gray-600 hover:text-fuchsia-600 transition"
+                  >
+                    {item.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+
+          {/* About MIND */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 0.5 }}
+            className="space-y-3"
+          >
+            <h3 className="text-lg font-semibold text-fuchsia-600 mb-2">
+              Tentang MIND
+            </h3>
+            <ul className="space-y-2">
+              {AboutMIND.map((item, index) => (
+                <li key={index}>
+                  <a
+                    href={item.link}
+                    className="text-gray-600 hover:text-fuchsia-600 transition"
+                  >
+                    {item.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+
+          {/* Information */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 0.7 }}
+            className="space-y-3"
+          >
+            <h3 className="text-lg font-semibold text-fuchsia-600 mb-2">
+              Informasi
+            </h3>
+            <ul className="space-y-2">
+              {Information.map((item, index) => (
+                <li key={index}>
+                  <a
+                    href={item.link}
+                    className="text-gray-600 hover:text-fuchsia-600 transition"
+                  >
+                    {item.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
         </div>
       </motion.footer>
 
@@ -102,10 +144,8 @@ const FooterLP = () => {
         transition={{ duration: 0.8, delay: 1 }}
         className="bg-fuchsia-50 text-gray-600 text-center py-4 flex flex-col items-center gap-2"
       >
-        <FaHeart className="text-fuchsia-400" />
         <p className="text-sm">
-          © {new Date().getFullYear()} Panti Jompo Harapan Sejahtera. All rights
-          reserved.
+          © {new Date().getFullYear()} MIND Platform. All rights reserved.
         </p>
       </motion.div>
     </div>

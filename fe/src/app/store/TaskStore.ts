@@ -1,3 +1,4 @@
+// src/app/store/TaskStore.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { VRTaskSession } from "../../type/VRdata";
 import {
@@ -9,7 +10,7 @@ import {
 
 export const TASKS_KEY = ["vr-tasks"];
 export type UpdateTaskPayload = {
-  status: "completed" | "failed" | "inProgress";
+  status: VRTaskSession["status"];
   remaining?: number;
   startedAt?: string;
   finishedAt?: string;
@@ -36,14 +37,18 @@ export function useAssignTasks(userId: string) {
   return useMutation({
     mutationFn: async (tasks: VRTaskSession[]) => {
       const tasksWithAssignedBy: VRTaskSession[] = tasks.map((t) => {
-        const hasTimer = t.duration && t.duration > 0;
+        // IMPORTANT:
+        // - `t.duration` is expected to already be in seconds (as set by TaskByAdmin).
+        // - therefore we must NOT multiply by 60 again.
+        const hasTimer = typeof t.duration === "number" && t.duration > 0;
 
         return {
           ...t,
           assignedBy: "admin-01",
           userId,
-          status: "inProgress" as const, // ✅ literal type
-          remaining: hasTimer ? t.duration! * 60 : undefined,
+          status: "inProgress" as const,
+          // <-- FIX: don't multiply by 60 if duration already in seconds
+          remaining: hasTimer ? t.duration! : undefined,
           startedAt: new Date().toISOString(),
         };
       });

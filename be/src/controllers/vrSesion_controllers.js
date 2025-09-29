@@ -18,7 +18,7 @@ const rotationSchema = z.object({
 
 const interactionSchema = z.object({
   id: z.string().min(1).max(500),
-  type: z.enum(["scene", "hotspot"]),
+  type: z.enum(["scene", "hotspot", "taskUpdate"]),
   targetId: z.string().min(1).max(500).optional(),
   targetName: z.string().min(1).max(500).optional(),
   targetType: z.string().min(1).max(500).optional(),
@@ -35,15 +35,23 @@ const roomVisitSchema = z.object({
 const taskSchema = z.object({
   taskId: z.string().min(1).max(500),
   taskName: z.string().min(1).max(500),
-  status: z.enum(["completed", "failed", "pending"]),
+  status: z.enum(["completed", "failed", "pending", "inProgress"]), // tambahin inProgress biar gak error
   sceneId: z.string().min(1).max(500),
   type: z.enum(["interaction", "navigation"]),
   description: z.string().min(1).max(500).optional(),
-  timeSpent: z
-    .number()
-    .int()
-    .nonnegative()
-    .max(24 * 60 * 60), // max 1 hari
+
+  // buat optional supaya gak selalu error
+  assignedBy: z.string().min(1).max(500).optional(),
+  userId: z.string().min(1).max(500).optional(),
+  locationId: z.string().min(1).max(500).optional(),
+
+  duration: z.number().int().nonnegative().max(86400).nullable().optional(),
+  remaining: z.number().int().nonnegative().nullable().optional(),
+  startedAt: z.string().datetime().nullable().optional(),
+  finishedAt: z.string().datetime().nullable().optional(),
+
+  // BE yang hitung, jadi optional aja
+  timeSpent: z.number().int().nonnegative().max(86400).optional(),
 });
 
 const createSessionSchema = z.object({
@@ -86,7 +94,7 @@ export const createVRSession = async (req, res) => {
       });
     }
     const data = parsed.data;
-    console.log("📤 Payload dikirim ke API /vrSession:", data);
+    console.log(data);
 
     // Otorisasi: admin boleh buat untuk siapa saja, user biasa hanya untuk dirinya
     if (!isAdmin(req) && !isSelf(req, data.userId)) {

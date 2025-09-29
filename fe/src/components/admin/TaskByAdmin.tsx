@@ -10,6 +10,7 @@ type Props = {
   onAssign?: (tasks: VRTaskSession[]) => void;
 };
 
+// ✅ format detik → menit:detik
 const formatTime = (seconds?: number) => {
   if (!seconds) return "No Limit";
   const m = Math.floor(seconds / 60);
@@ -21,8 +22,11 @@ export default function TaskByAdmin({ user, onAssign }: Props) {
   const [selected, setSelected] = useState<VRTaskSession[]>([]);
   const assignTasks = useAssignTasks(user.id);
 
-  const toggleTask = (task: SceneTask, duration?: number) => {
+  const toggleTask = (task: SceneTask, durationMin?: number) => {
+    // ✅ simpan dalam detik
+    const durationSec = durationMin ? durationMin * 60 : undefined;
     const exists = selected.find((t) => t.taskId === task.taskId);
+
     if (exists) {
       setSelected(selected.filter((t) => t.taskId !== task.taskId));
     } else {
@@ -31,8 +35,8 @@ export default function TaskByAdmin({ user, onAssign }: Props) {
         {
           ...task,
           assignedBy: "admin-01",
-          duration,
-          remaining: duration ? duration * 60 : undefined,
+          duration: durationSec, // simpan detik
+          remaining: durationSec, // simpan detik
           status: "inProgress" as const,
           startedAt: new Date().toISOString(),
         },
@@ -45,8 +49,8 @@ export default function TaskByAdmin({ user, onAssign }: Props) {
 
     const payload: VRTaskSession[] = selected.map((t) => ({
       ...t,
-      status: "inProgress" as const, // wajib literal type
-      remaining: t.duration ? t.duration * 60 : undefined,
+      status: "inProgress" as const,
+      remaining: t.duration, // ✅ langsung detik
       startedAt: t.startedAt ?? new Date().toISOString(),
       userId: user.id,
     }));
@@ -94,16 +98,17 @@ export default function TaskByAdmin({ user, onAssign }: Props) {
                   <label>Set Timer:</label>
                   <select
                     className="border rounded px-2 py-1 text-sm"
-                    value={sel.duration ?? 0}
+                    value={(sel.duration ?? 0) / 60} // tampilkan menit
                     onChange={(e) => {
                       const val = parseInt(e.target.value);
+                      const durationSec = val > 0 ? val * 60 : undefined;
                       setSelected((prev) =>
                         prev.map((t) =>
                           t.taskId === task.taskId
                             ? {
                                 ...t,
-                                duration: val > 0 ? val : undefined,
-                                remaining: val > 0 ? val * 60 : undefined,
+                                duration: durationSec, // simpan detik
+                                remaining: durationSec, // simpan detik
                               }
                             : t
                         )

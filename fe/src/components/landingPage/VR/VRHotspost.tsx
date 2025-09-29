@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { memo, useCallback } from "react";
 import { Html } from "@react-three/drei";
 import { motion } from "framer-motion";
 import { IoMdNavigate } from "react-icons/io";
@@ -12,10 +12,11 @@ interface HotspotProps {
   onClick: () => void;
 }
 
-export default function Hotspot({ data, onClick }: HotspotProps) {
+function HotspotComponent({ data, onClick }: HotspotProps) {
   const handleClick = useCallback(() => {
+    console.log("click hotspot:", data.name);
     onClick();
-  }, [onClick]);
+  }, [onClick, data.name]);
 
   let IconComp;
   if (data.type === "navigation") IconComp = IoMdNavigate;
@@ -30,10 +31,10 @@ export default function Hotspot({ data, onClick }: HotspotProps) {
           onClick={handleClick}
           className="bg-white rounded-full p-3 shadow-md cursor-pointer transform-gpu"
           title={data.name}
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
+          initial={false} // skip initial animation untuk re-render cepat
+          animate={{ scale: 1 }}
           whileHover={{ scale: 1.1 }}
+          transition={{ duration: 0.2 }}
         >
           {IconComp && (
             <IconComp
@@ -53,3 +54,14 @@ export default function Hotspot({ data, onClick }: HotspotProps) {
     </group>
   );
 }
+
+// ✅ Memo dengan custom comparison supaya tidak re-render jika props tidak berubah
+export default memo(
+  HotspotComponent,
+  (prev, next) =>
+    prev.data.id === next.data.id &&
+    prev.data.type === next.data.type &&
+    prev.data.position[0] === next.data.position[0] &&
+    prev.data.position[1] === next.data.position[1] &&
+    prev.data.position[2] === next.data.position[2]
+);

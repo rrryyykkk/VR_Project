@@ -11,17 +11,22 @@ export default function Scene({ image, onLoaded }: SceneProps) {
   const texture = useLoader(THREE.TextureLoader, image);
 
   useEffect(() => {
+    const start = performance.now();
+
     if (texture) {
       texture.minFilter = THREE.LinearMipmapLinearFilter;
       texture.magFilter = THREE.LinearFilter;
       texture.anisotropy = 4;
+
       if (onLoaded) onLoaded();
+
+      const end = performance.now();
+      console.log(`Scene "${image}" render took ${end - start} ms`);
     }
-  }, [texture, onLoaded]);
+  }, [texture, image, onLoaded]);
 
   return (
     <mesh scale={[-1, 1, 1]}>
-      {/* sphere dibalik di sumbu X dengan segment lebih ringan */}
       <sphereGeometry args={[500, 32, 16]} />
       <meshBasicMaterial map={texture} side={THREE.BackSide} />
     </mesh>

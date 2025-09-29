@@ -3,6 +3,17 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "overrides": {
+    "stats-gl": {
+      "three": "0.179.1"
+    },
+    "@iwer/devui": {
+      "three": "0.179.1"
+    },
+    "@iwer/sem": {
+      "three": "0.179.1"
+    }
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

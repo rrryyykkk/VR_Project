@@ -1,3 +1,4 @@
+// src/type/VRdata.ts
 import type { User } from "./user";
 
 export interface RoomVisit {
@@ -13,6 +14,7 @@ export interface CameraRotation {
   rotY: number;
 }
 
+/** Simple Task DTO sent to BE for reporting / summaries */
 export interface Task {
   taskId: string;
   taskName: string;
@@ -23,6 +25,7 @@ export interface Task {
   timeSpent: number; // in seconds
 }
 
+/** AssignedTask is what BE uses / stores per-assignment (kept for compatibility) */
 export interface AssignedTask {
   id: string; // cuid di BE (task.id)
   taskId: string;
@@ -33,7 +36,7 @@ export interface AssignedTask {
   timeSpent: number;
 }
 
-// Union type untuk interactions
+/** Interaction types */
 export interface SceneOrHotspotInteraction {
   id: string;
   type: "scene" | "hotspot";
@@ -43,15 +46,38 @@ export interface SceneOrHotspotInteraction {
   timestamp: string;
 }
 
+/** TaskUpdateInteraction originally referenced Task[] | AssignedTask[].
+    Extend it so it also accepts VRTaskSession[] (frontend full payload). */
 export interface TaskUpdateInteraction {
   id: string;
   type: "taskUpdate";
-  targetTasks: Task[] | AssignedTask[];
+  // allow Task[] | AssignedTask[] | VRTaskSession[] so frontend can include full task sessions
+  targetTasks: Task[] | AssignedTask[] | VRTaskSession[];
   timestamp: string;
 }
 
 export type Interaction = SceneOrHotspotInteraction | TaskUpdateInteraction;
 
+/** VRTaskSession: full frontend in-memory task/session record */
+export type VRTaskSession = {
+  taskId: string;
+  taskName: string;
+  assignedBy: string;
+  description?: string;
+  sceneId: string;
+  duration?: number; // minutes (optional)
+  status: "pending" | "inProgress" | "failed" | "completed" | "incomplete";
+  type: "interaction" | "navigation";
+  remaining?: number; // seconds
+  startedAt?: string | null;
+  finishedAt?: string | null;
+  userId?: string;
+  // optional local metadata
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+/** VRSession: allow tasks to be either Task[] (summary) OR VRTaskSession[] (full) */
 export interface VRSession {
   sessionId: string;
   userId: string;
@@ -65,25 +91,12 @@ export interface VRSession {
   user?: User;
   roomHistory?: RoomVisit[];
   cameraRotations?: CameraRotation[];
-  tasks?: Task[];
+  // <-- Accept Task[] OR full VRTaskSession[]
+  tasks?: Task[] | VRTaskSession[];
   interactions?: Interaction[];
 }
 
-// VRdata.ts
-export type VRTaskSession = {
-  taskId: string;
-  taskName: string;
-  assignedBy: string;
-  description?: string;
-  sceneId: string;
-  duration?: number; // menit
-  status: "pending" | "inProgress" | "failed" | "completed" | "incomplete";
-  type: "interaction" | "navigation";
-  remaining?: number; // detik
-  startedAt?: string;
-  finishedAt?: string;
-};
-
+/** extras */
 export interface VRSessionExtended extends VRSession {
   assignedTasks?: AssignedTask[];
   currentTask?: AssignedTask;
@@ -92,6 +105,7 @@ export interface VRSessionExtended extends VRSession {
 export type HostpotType = "navigation" | "exit" | "interaction" | "location";
 
 export interface HotspotData {
+  id: string;
   targetId: string;
   position: [number, number, number];
   direction: [number, number, number];
@@ -109,7 +123,7 @@ export interface SceneData {
   hotspots: HotspotData[];
 }
 
-// hasil ekstrak scene Task dari scene Data
+/** SceneTask used by admin UI */
 export interface SceneTask {
   taskId: string;
   taskName: string;

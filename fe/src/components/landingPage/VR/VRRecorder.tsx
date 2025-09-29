@@ -9,7 +9,6 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import type {
   CameraRotation,
-  Task,
   VRSession,
   VRTaskSession,
 } from "../../../type/VRdata";
@@ -73,7 +72,7 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
     const sessionRef = useRef<VRSession | null>(null);
     const lastSceneRef = useRef<{ id: string; name: string } | null>(null);
 
-    // 🔥 Pisahin interval untuk heartbeat dan rotation
+    // Pisahin interval untuk heartbeat dan rotation
     const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const rotationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(
       null
@@ -99,122 +98,6 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
 
     // -----------------------------
     // Helpers
-    // -----------------------------
-    const computeTimeSpent = (t: VRTaskSession): number => {
-      if (t.startedAt && t.finishedAt) {
-        const diffMs =
-          new Date(t.finishedAt).getTime() - new Date(t.startedAt).getTime();
-        return Math.max(0, Math.floor(diffMs / 1000));
-      }
-      if (t.duration !== undefined) {
-        const total = t.duration * 60;
-        const rem = t.remaining ?? total;
-        return Math.max(0, total - rem);
-      }
-      return 0;
-    };
-
-    const mapVRTaskSessionToTask = (t: VRTaskSession): Task => ({
-      taskId: t.taskId,
-      taskName: t.taskName,
-      description: t.description ?? "",
-      status:
-        t.status === "incomplete"
-          ? "failed"
-          : t.status === "inProgress"
-          ? "pending"
-          : (t.status as Task["status"]),
-      sceneId: t.sceneId ?? currentSceneId,
-      type: t.type,
-      timeSpent: computeTimeSpent(t),
-    });
-
-    // -----------------------------
-    // Countdown timer untuk tasks
-    // -----------------------------
-    useEffect(() => {
-      if (!recording) return;
-      const interval = setInterval(() => {
-        lastTasksRef.current.forEach((t) => {
-          if (t.status === "inProgress" && t.remaining !== undefined) {
-            const newRemaining = t.remaining - 1;
-            updateTask.mutate({
-              taskId: t.taskId,
-              payload: {
-                remaining: Math.max(newRemaining, 0),
-                status: newRemaining <= 0 ? "failed" : "inProgress",
-              },
-            });
-          }
-        });
-      }, 1000);
-      return () => clearInterval(interval);
-    }, [recording, updateTask]);
-
-    // -----------------------------
-    // Sync rotation
-    // -----------------------------
-    useEffect(() => {
-      rotationRef.current = rotation;
-    }, [rotation]);
-
-    // -----------------------------
-    // Cleanup sessionStorage on unload
-    // -----------------------------
-    useEffect(() => {
-      const handleUnload = () => {
-        sessionStorage.removeItem(STORAGE_KEY);
-        sessionRef.current = null;
-      };
-      window.addEventListener("beforeunload", handleUnload);
-      return () => window.removeEventListener("beforeunload", handleUnload);
-    }, []);
-
-    // -----------------------------
-    // Heartbeat untuk isRecord
-    // -----------------------------
-    useEffect(() => {
-      if (!user || !recording) return;
-      heartbeatRef.current = setInterval(() => setIsRecord(true), 2000);
-      return () => {
-        if (heartbeatRef.current) {
-          clearInterval(heartbeatRef.current);
-          heartbeatRef.current = null;
-          setIsRecord(false);
-        }
-      };
-    }, [recording, user, setIsRecord]);
-
-    // -----------------------------
-    // Show start/stop modal
-    // -----------------------------
-    useEffect(() => {
-      if (!currentSceneId) return;
-      if (exitSceneIds.includes(currentSceneId)) {
-        if (recording) setShowModal({ type: "stop", open: true });
-        else {
-          dismissedStartScenes.current.clear();
-          onAllowEnterScene?.();
-        }
-        return;
-      }
-      if (
-        startSceneIds.includes(currentSceneId) &&
-        !recording &&
-        !dismissedStartScenes.current.has(currentSceneId)
-      ) {
-        setShowModal({ type: "start", open: true });
-      }
-    }, [
-      currentSceneId,
-      recording,
-      startSceneIds,
-      exitSceneIds,
-      onAllowEnterScene,
-    ]);
-
-    // -----------------------------
-    // Record rotation
     // -----------------------------
     const recordRotationOnce = async () => {
       if (!sessionRef.current) return;
@@ -247,6 +130,56 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
     };
 
     useEffect(() => {
+      rotationRef.current = rotation;
+    }, [rotation]);
+
+    useEffect(() => {
+      const handleUnload = () => {
+        sessionStorage.removeItem(STORAGE_KEY);
+        sessionRef.current = null;
+      };
+      window.addEventListener("beforeunload", handleUnload);
+      return () => window.removeEventListener("beforeunload", handleUnload);
+    }, []);
+
+    useEffect(() => {
+      if (!user || !recording) return;
+      heartbeatRef.current = setInterval(() => setIsRecord(true), 2000);
+      return () => {
+        if (heartbeatRef.current) {
+          clearInterval(heartbeatRef.current);
+          heartbeatRef.current = null;
+          setIsRecord(false);
+        }
+      };
+    }, [recording, user, setIsRecord]);
+
+    useEffect(() => {
+      if (!currentSceneId) return;
+      if (exitSceneIds.includes(currentSceneId)) {
+        if (recording) setShowModal({ type: "stop", open: true });
+        else {
+          dismissedStartScenes.current.clear();
+          onAllowEnterScene?.();
+        }
+        return;
+      }
+      if (
+        startSceneIds.includes(currentSceneId) &&
+        !recording &&
+        !dismissedStartScenes.current.has(currentSceneId)
+      ) {
+        setShowModal({ type: "start", open: true });
+      }
+    }, [
+      currentSceneId,
+      recording,
+      startSceneIds,
+      exitSceneIds,
+      onAllowEnterScene,
+    ]);
+
+    useEffect(() => {
       if (!recording) return;
       rotationIntervalRef.current = setInterval(recordRotationOnce, 200);
       recordRotationOnce();
@@ -258,9 +191,6 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
       };
     }, [recording]);
 
-    // -----------------------------
-    // Track scene changes
-    // -----------------------------
     useEffect(() => {
       if (!recording || !sessionRef.current || !currentSceneId) return;
       if (lastSceneRef.current?.id === currentSceneId) return;
@@ -332,7 +262,7 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
         setRecording(true);
         addToast("Recording dimulai", "success");
 
-        // 🚀 langsung jalankan tasks timer
+        // mulai semua task yang pending menjadi inProgress (dari admin assign)
         lastTasksRef.current.forEach((t) => {
           if (t.status === "pending") {
             updateTask.mutate({
@@ -380,20 +310,53 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
       buffer = [];
       await deleteAllChunks();
 
-      // ✅ Update semua tasks otomatis
-      lastTasksRef.current.forEach((t) => {
-        if (t.status === "inProgress") {
-          updateTask.mutate({
-            taskId: t.taskId,
-            payload: {
-              status: "completed",
-              finishedAt: stopIso,
-              remaining: 0,
-            },
-          });
+      // -----------------------------------------
+      // 1) Siapkan tasksForBackend (full VRTaskSession[])
+      //    - semua task yang belum completed -> FAILED
+      //    - sertakan startedAt, finishedAt, remaining supaya BE dapat compute timeSpent
+      // -----------------------------------------
+      const tasksForBackend: VRTaskSession[] = lastTasksRef.current.map((t) => {
+        if (t.status === "completed" || t.status === "failed") {
+          return t; // biarkan apa adanya
         }
+
+        // pending / inProgress => gagal karena recording dihentikan
+        return {
+          ...t,
+          status: "failed",
+          startedAt: t.startedAt ?? stopIso,
+          finishedAt: stopIso,
+          remaining: t.duration ? t.remaining ?? 0 : undefined,
+        };
       });
 
+      console.log("📤 Semua task yang akan dikirim ke BE:", tasksForBackend);
+
+      // -----------------------------------------
+      // 2) Persist update ke store/IDB (fire-and-forget)
+      // -----------------------------------------
+      tasksForBackend.forEach((t) => {
+        // kalau tugas sudah sebelumnya 'completed' atau 'failed' skip (sudah final)
+        const orig = lastTasksRef.current.find((x) => x.taskId === t.taskId);
+        if (orig && (orig.status === "completed" || orig.status === "failed")) {
+          return;
+        }
+
+        // kirim update ke IDB / store
+        const payload: Parameters<typeof updateTask.mutate>[0]["payload"] = {
+          status: t.status,
+        };
+        if (t.duration !== undefined) payload.remaining = t.remaining ?? 0;
+        // set finishedAt so UI/store has timestamp (use server can also set it)
+        payload.finishedAt = t.finishedAt ?? stopIso;
+        if (t.startedAt) payload.startedAt = t.startedAt;
+
+        updateTask.mutate({ taskId: t.taskId, payload });
+      });
+
+      // -----------------------------------------
+      // 3) Buat VRSession final & kirim ke BE (full tasks)
+      // -----------------------------------------
       const finished: VRSession = {
         ...sessionRef.current,
         endTime: stopIso,
@@ -407,9 +370,10 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
         ),
         roomHistory: closedHistory,
         cameraRotations: allRotations,
-        tasks: lastTasksRef.current.map(mapVRTaskSessionToTask),
+        tasks: tasksForBackend,
       };
 
+      // set local state & storage
       setRecording(false);
       setSession(finished);
       sessionRef.current = finished;
@@ -418,6 +382,7 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
       dismissedStartScenes.current.clear();
       setIsRecord(false);
 
+      // send to BE
       if (user) {
         createSessionMutation.mutate(finished, {
           onSuccess: async () => {
@@ -443,7 +408,7 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
     };
 
     // -----------------------------
-    // Log Interactions
+    // Log Interactions (expose to parent via ref)
     // -----------------------------
     useImperativeHandle(ref, () => ({
       logInteraction(type, target) {
@@ -451,7 +416,6 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
 
         if (type === "taskUpdate") {
           const vrTasks = (target as { tasks: VRTaskSession[] }).tasks;
-          const mappedTasks: Task[] = vrTasks.map(mapVRTaskSessionToTask);
 
           const updated: VRSession = {
             ...sessionRef.current,
@@ -460,7 +424,7 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
               {
                 id: crypto.randomUUID(),
                 type,
-                targetTasks: mappedTasks,
+                targetTasks: vrTasks,
                 timestamp: new Date().toISOString(),
               },
             ],
@@ -498,9 +462,6 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
       isRecording: recording,
     }));
 
-    // -----------------------------
-    // Cleanup on unmount
-    // -----------------------------
     useEffect(() => {
       return () => {
         setIsRecord(false);
@@ -510,9 +471,6 @@ const VRRecorder = forwardRef<VRRecorderHandle, VRRecorderProps>(
       };
     }, [setIsRecord]);
 
-    // -----------------------------
-    // UI
-    // -----------------------------
     return (
       <>
         <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded">

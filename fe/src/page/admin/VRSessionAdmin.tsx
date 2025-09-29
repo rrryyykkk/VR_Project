@@ -1,4 +1,3 @@
-// src/components/admin/VRSessionAdmin.tsx
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MdOutlineRefresh } from "react-icons/md";
@@ -8,6 +7,19 @@ import type { VRTaskSession } from "../../type/VRdata";
 import { useAllUsers } from "../../app/store/UserStore";
 import TaskByAdmin from "../../components/admin/TaskByAdmin";
 import { useToast } from "../../hooks/ToastContext";
+
+// ✅ helper format lebih natural
+const formatTime = (sec?: number) => {
+  if (sec === undefined) return "No Limit";
+
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+
+  if (h > 0) return `${h} Jam ${m} Menit ${s} Detik`;
+  if (m > 0) return s > 0 ? `${m} Menit ${s} Detik` : `${m} Menit`;
+  return `${s} Detik`;
+};
 
 const VRSessionAdmin = () => {
   const [selectedUser, setSelectedUser] = useState<UserVR | null>(null);
@@ -84,6 +96,7 @@ const VRSessionAdmin = () => {
         </button>
       </div>
 
+      {/* table user list */}
       <div className="overflow-x-auto rounded-lg shadow">
         <table className="w-full table-auto border-collapse">
           <thead className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
@@ -147,6 +160,7 @@ const VRSessionAdmin = () => {
         </table>
       </div>
 
+      {/* modal task assign */}
       <AnimatePresence>
         {selectedUser && (
           <motion.div
@@ -233,6 +247,7 @@ const VRSessionAdmin = () => {
         )}
       </AnimatePresence>
 
+      {/* assigned tasks list */}
       {Object.keys(tasksByUser).length > 0 && (
         <div className="mt-6">
           <h3 className="text-lg font-semibold mb-2">Tasks Assigned</h3>
@@ -268,13 +283,7 @@ const VRSessionAdmin = () => {
                         {task.status}
                       </td>
                       <td className="px-4 py-2">
-                        {task.remaining
-                          ? `${Math.floor(task.remaining / 60)
-                              .toString()
-                              .padStart(2, "0")}:${(task.remaining % 60)
-                              .toString()
-                              .padStart(2, "0")}`
-                          : "No Limit"}
+                        {formatTime(task.remaining)}
                       </td>
                     </tr>
                   ))
